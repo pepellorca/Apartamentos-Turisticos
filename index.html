@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Apartamentos Benidorm V2</title>
+<title>Apartamentos Turísticos Benidorm</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Aptos Benidorm V2">
+<meta name="apple-mobile-web-app-title" content="Apartamentos Turísticos Benidorm">
 <meta name="theme-color" content="#023E8A">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
@@ -182,6 +182,13 @@
   .event-item.llegada  { border-color: var(--verde); background: #F0FFF4; }
   .event-item.salida   { border-color: var(--coral); background: #FFF5F5; }
   .event-item.limpieza { border-color: var(--sol);   background: #FFFBEB; }
+  .event-item.limpieza-aviso { border-color: var(--sol); background: #FFFBEB; }
+  .event-item.limpieza-curso { border-color: #F97316; background: #FFF7ED; }
+  .event-item.limpieza-verificar { border-color: var(--mar); background: #EFF9FF; }
+  .limpieza-estado { display:inline-flex; align-items:center; padding:2px 8px; border-radius:20px; font-size:.7rem; font-weight:700; margin-top:4px; }
+  .limpieza-estado.aviso { background:#FEF3C7; color:#92400E; }
+  .limpieza-estado.curso { background:#FFEDD5; color:#9A3412; }
+  .limpieza-estado.verificar { background:#DBEAFE; color:#1E40AF; }
   .event-icon { font-size: 1.3rem; line-height: 1; flex-shrink: 0; }
   .event-body { flex: 1; min-width: 0; }
   .event-name { font-weight: 700; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -281,10 +288,15 @@
 
   /* GESTION */
   .gest-card { background: #fff; border-radius: var(--r); box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden; border-left: 5px solid var(--gris-3); }
-  .gest-card.ocupado { border-color: var(--coral); }
-  .gest-card.checkin { border-color: var(--mar); }
-  .gest-card.libre   { border-color: var(--verde); }
-  .gest-card.pasada  { border-color: var(--gris-3); opacity: .8; }
+  .gest-card.confirmada { border-color: var(--verde); }
+  .gest-card.ocupado   { border-color: var(--coral); }
+  .gest-card.salida    { border-color: var(--sol); }
+  .gest-card.completada{ border-color: var(--mar); opacity: .92; }
+  .gest-status { display:inline-flex; align-items:center; margin-left:6px; padding:2px 8px; border-radius:20px; font-size:.7rem; font-weight:700; white-space:nowrap; }
+  .gest-status.confirmada { background:#DCFCE7; color:#166534; }
+  .gest-status.ocupado    { background:#FEE2E2; color:#991B1B; }
+  .gest-status.salida     { background:#FEF3C7; color:#92400E; }
+  .gest-status.completada { background:#DBEAFE; color:#1E40AF; }
   .gest-header { padding: 14px 16px 10px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; cursor: pointer; }
   .gest-nombre { font-weight: 700; font-size: .92rem; color: var(--gris-5); }
   .gest-meta   { font-size: .78rem; color: var(--gris-4); margin-top: 2px; }
@@ -400,7 +412,7 @@
 <body>
 
 <header>
-  <div class="logo"><img src="icon.png" style="width:28px;height:28px;border-radius:6px;vertical-align:middle;margin-right:8px" onerror="this.style.display='none'"> <span class="logo-text">Apartamentos Benidorm V2</span></div>
+  <div class="logo"><img src="icon.png" style="width:28px;height:28px;border-radius:6px;vertical-align:middle;margin-right:8px" onerror="this.style.display='none'"> <span class="logo-text">Apartamentos Turísticos Benidorm</span></div>
   <div class="header-right" style="position:relative">
     <div class="header-meta">
       <strong id="header-date"></strong>
@@ -422,7 +434,7 @@
 <div id="login-screen" class="login-screen">
   <div class="login-card">
     <span class="login-icon">&#127944;</span>
-    <h1>Apartamentos Benidorm V2</h1>
+    <h1>Apartamentos Turísticos Benidorm</h1>
     <p>Gesti&#243;n de reservas, check-ins y limpiezas.<br>Inicia sesi&#243;n con tu cuenta de Google para acceder.</p>
     <div id="google-signin-btn" style="display:flex;justify-content:center;margin-bottom:12px"></div>
     <button class="btn-google" onclick="signIn()" id="btn-signin-fallback">
@@ -464,7 +476,7 @@
       <div style="height:16px"></div>
       <div class="today-grid">
         <div><div class="card-title">&#128994; Llegadas ma&#241;ana</div><div class="event-list" id="list-llegadas-manana"></div></div>
-        <div><div class="card-title">&#129529; Limpiezas ma&#241;ana</div><div class="event-list" id="list-limpiezas-manana"></div></div>
+        <div><div class="card-title">&#129529; Limpiezas</div><div class="event-list" id="list-limpiezas"></div></div>
       </div>
       <div style="height:16px"></div>
       <div id="alertas-block"></div>
@@ -649,7 +661,7 @@
 const CLIENT_ID = '1089794111861-0aom7g1gph610kf1i22s7rbkcktq9dgs.apps.googleusercontent.com';
 const DRIVE_FOLDER_ID = '1wIxPwPH3GulG6wZe_cV956LXxajd8au8'; // Carpeta "Airbnb CSV" fija
 const OPENAI_API_KEY = ''; // Nunca publiques una clave de OpenAI en el HTML
-const APPS_SCRIPT_URL = 'PEGA_AQUI_LA_NUEVA_URL_EXEC_DEL_APPS_SCRIPT';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQ7eog7rWAciUQD46krqZj2CIir37YGnxkv3U8CcxC6D2Pkg1cYGjVtSKH2XftADPmXg/exec';
 // Sustituye el valor anterior por la URL /exec de la NUEVA implementación antes de publicar.
 const EMAILS_AUTORIZADOS = [
   'pepe.llorca@gmail.com',
@@ -1215,15 +1227,22 @@ function renderHoy() {
   const salidasHoy     = reservas.filter(r=>dateKey(r.salida) ===kHoy);
   const llegadasManana = reservas.filter(r=>dateKey(r.entrada)===kMan);
   const salidasManana  = reservas.filter(r=>dateKey(r.salida) ===kMan);
-  const aptosSalidaMan = new Set(salidasManana.map(r=>r.aptoIdx));
-  const limpiezasMan   = [...salidasManana, ...llegadasManana.filter(r=>!aptosSalidaMan.has(r.aptoIdx))];
+
+  // Estados operativos de limpieza:
+  // 1) un día antes de la salida: avisar a limpieza
+  // 2) el día de la salida: piso en limpieza
+  // 3) el día de la entrada: verificar limpieza antes del check-in
+  const estadosLimpieza = [];
+  salidasHoy.forEach(r => estadosLimpieza.push({ reserva:r, estado:'curso' }));
+  llegadasHoy.forEach(r => estadosLimpieza.push({ reserva:r, estado:'verificar' }));
+  salidasManana.forEach(r => estadosLimpieza.push({ reserva:r, estado:'aviso' }));
 
   renderEstadoAptos();
 
   renderEventList('list-llegadas-hoy',    llegadasHoy,    'llegada');
   renderEventList('list-salidas-hoy',     salidasHoy,     'salida');
   renderEventList('list-llegadas-manana', llegadasManana, 'llegada');
-  renderEventList('list-limpiezas-manana',limpiezasMan,   'limpieza');
+  renderLimpiezas(estadosLimpieza);
 
   const alertas=[];
   reservas.forEach(r=>{
@@ -1236,6 +1255,52 @@ function renderHoy() {
 
   document.getElementById('alertas-block').innerHTML = alertas.length ?
     `<div class="card" style="border-left:4px solid var(--coral)"><div class="card-title">Alertas</div>${alertas.map(a=>`<div style="padding:8px 0;font-size:.85rem;border-bottom:1px solid var(--gris-2)">${a}</div>`).join('')}</div>` : '';
+}
+
+function renderLimpiezas(items) {
+  const el = document.getElementById('list-limpiezas');
+  if (!el) return;
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state"><span class="emoji">&#10024;</span>Sin acciones de limpieza</div>';
+    return;
+  }
+
+  const orden = { curso:0, verificar:1, aviso:2 };
+  items = items.slice().sort(function(a,b) {
+    if (orden[a.estado] !== orden[b.estado]) return orden[a.estado] - orden[b.estado];
+    return a.reserva.aptoIdx - b.reserva.aptoIdx;
+  });
+
+  const cfg = {
+    aviso: {
+      clase:'limpieza-aviso', badge:'aviso', icon:'&#128276;',
+      titulo:'Avisar a limpieza',
+      detalle:function(r){ return r.huesped + ' sale ma&ntilde;ana &bull; confirmar limpieza'; }
+    },
+    curso: {
+      clase:'limpieza-curso', badge:'curso', icon:'&#129529;',
+      titulo:'Piso en limpieza',
+      detalle:function(r){ return r.huesped + ' sale hoy &bull; preparar el apartamento'; }
+    },
+    verificar: {
+      clase:'limpieza-verificar', badge:'verificar', icon:'&#9989;',
+      titulo:'Verificar limpieza piso',
+      detalle:function(r){ return r.huesped + ' entra hoy &bull; revisar antes del check-in'; }
+    }
+  };
+
+  el.innerHTML = items.map(function(item) {
+    const r = item.reserva;
+    const apto = APTOS[r.aptoIdx] || APTOS[0];
+    const c = cfg[item.estado];
+    return '<div class="event-item '+c.clase+'" onclick="openModal(\''+r.id+'\')">'
+      + '<div class="event-icon">'+c.icon+'</div>'
+      + '<div class="event-body">'
+      + '<div class="event-name">'+apto.alias+'</div>'
+      + '<div class="event-meta">'+c.detalle(r)+'</div>'
+      + '<span class="limpieza-estado '+c.badge+'">'+c.titulo+'</span>'
+      + '</div></div>';
+  }).join('');
 }
 
 function renderEventList(containerId, items, tipo) {
@@ -2276,11 +2341,12 @@ function renderGestion() {
     var apto=APTOS[r.aptoIdx]||APTOS[0];
     var cCls=r.aptoIdx===0?'apto-tag-0':'apto-tag-1';
     var dias=Math.round((r.entrada-hoy)/86400000);
-    var esOc=r.entrada<=hoy&&r.salida>hoy;
-    var esCI=dateKey(r.entrada)===dateKey(hoy);
-    var esPas=r.salida<hoy;
-    var sCls=esCI?'checkin':esOc?'ocupado':esPas?'pasada':'libre';
-    var sTxt=esCI?'Check-in hoy':esOc?'Ocupado':esPas?'Pasada':dias+' d\u00edas';
+    var kHoy=dateKey(hoy);
+    var esSalidaHoy=dateKey(r.salida)===kHoy;
+    var esOcupada=r.entrada<=hoy&&r.salida>hoy;
+    var esCompletada=r.salida<hoy;
+    var sCls=esSalidaHoy?'salida':esOcupada?'ocupado':esCompletada?'completada':'confirmada';
+    var sTxt=esSalidaHoy?'Sale hoy':esOcupada?'Piso ocupado':esCompletada?'Completada':'Confirmada';
     var m1=getMsgEnviado(r.id,'bienvenida');
     var m2=getMsgEnviado(r.id,'confirmacion');
     var m3=getMsgEnviado(r.id,'despedida');
@@ -2288,7 +2354,7 @@ function renderGestion() {
     var nV=ci&&ci.viajeros?ci.viajeros.length:ci?1:0;
     return '<div class="gest-card '+sCls+'">'
       +'<div class="gest-header" onclick="toggleGest('+i+')">'
-      +'<div><div class="gest-nombre">&#128100; '+r.huesped+' <span style="font-size:.72rem;font-weight:400;color:var(--gris-4)">'+sTxt+'</span></div>'
+      +'<div><div class="gest-nombre">&#128100; '+r.huesped+' <span class="gest-status '+sCls+'">'+sTxt+'</span></div>'
       +'<div class="gest-meta">'+fmtDate(r.entrada)+' \u2192 '+fmtDate(r.salida)+' \u00b7 '+r.noches+' noches \u00b7 '+r.importe+'\u20ac</div>'
       +'<div class="gest-meta '+cCls+'" style="margin-top:2px;font-weight:700">'+apto.alias+'</div></div>'
       +'<div style="display:flex;gap:3px;align-items:center;font-size:.85rem">'
