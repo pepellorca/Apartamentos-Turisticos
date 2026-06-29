@@ -489,6 +489,32 @@
   /* CALENDARIO - días intermedios más opacos */
   .res-bar.medio { opacity: .8; }
   .res-bar.salida-dia { background: #E63946 !important; color: #fff !important; font-weight: 700; }
+
+
+/* Avisos compactos de la pantalla Hoy */
+.avisos-importantes { margin: 18px 0 22px; }
+.aviso-operativo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin: 10px 0;
+  border: 1px solid var(--gris-2);
+  border-left: 5px solid #f59e0b;
+  border-radius: 14px;
+  background: #fffaf0;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, .05);
+}
+.aviso-operativo.urgente { border-left-color: var(--coral); background: #fff5f5; }
+.aviso-operativo.pendiente { border-left-color: #f59e0b; background: #fffaf0; }
+.aviso-operativo-icon { font-size: 1.45rem; flex: 0 0 auto; }
+.aviso-operativo-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.aviso-operativo-body strong { color: var(--azul-oscuro); font-size: .94rem; }
+.aviso-operativo-body span { color: var(--gris); font-size: .82rem; line-height: 1.35; }
+@media (max-width: 640px) {
+  .aviso-operativo { align-items: flex-start; flex-wrap: wrap; }
+  .aviso-operativo .btn-operativo { margin-left: 42px; }
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -551,15 +577,8 @@
     <!-- HOY -->
     <div class="view active" id="view-hoy">
       <div id="estado-aptos-block"></div>
-      <div id="mensajes-airbnb-block"></div>
-      <div class="today-grid">
-        <div><div class="card-title">&#128994; Llegadas</div><div class="event-list" id="list-llegadas"></div></div>
-        <div><div class="card-title">&#128308; Salidas hoy</div><div class="event-list" id="list-salidas-hoy"></div></div>
-      </div>
-      <div style="height:16px"></div>
-      <div><div class="card-title">&#129529; Limpiezas</div><div class="event-list" id="list-limpiezas"></div></div>
-      <div style="height:16px"></div>
       <div id="alertas-block"></div>
+      <div id="mensajes-airbnb-block"></div>
     </div>
 
     <!-- CALENDARIO -->
@@ -1639,42 +1658,94 @@ function renderEstadoAptos() {
 function renderHoy() {
   const hoy = new Date(); hoy.setHours(0,0,0,0);
   const man = new Date(hoy); man.setDate(man.getDate()+1);
-  const kHoy=dateKey(hoy), kMan=dateKey(man);
+  const kHoy = dateKey(hoy), kMan = dateKey(man);
 
-  const llegadasHoy    = reservas.filter(r=>dateKey(r.entrada)===kHoy);
-  const salidasHoy     = reservas.filter(r=>dateKey(r.salida) ===kHoy);
-  const llegadasManana = reservas.filter(r=>dateKey(r.entrada)===kMan);
-  const salidasManana  = reservas.filter(r=>dateKey(r.salida) ===kMan);
-
-  // Estados operativos de limpieza:
-  // 1) un día antes de la salida: avisar a limpieza
-  // 2) el día de la salida: piso en limpieza
-  // 3) el día de la entrada: verificar limpieza antes del check-in
-  const estadosLimpieza = [];
-  salidasHoy.forEach(r => estadosLimpieza.push({ reserva:r, estado:'curso' }));
-  llegadasHoy.forEach(r => estadosLimpieza.push({ reserva:r, estado:'verificar' }));
-  salidasManana.forEach(r => estadosLimpieza.push({ reserva:r, estado:'aviso' }));
-
+  // La tarjeta de preparación concentra llegadas, salidas y limpieza.
   renderEstadoAptos();
 
-  renderLlegadas([
-    ...llegadasHoy.map(r => ({reserva:r, estado:'hoy'})),
-    ...llegadasManana.map(r => ({reserva:r, estado:'manana'}))
-  ]);
-  renderEventList('list-salidas-hoy', salidasHoy, 'salida');
-  renderLimpiezas(estadosLimpieza);
+  // Solo se muestran avisos que requieren una acción. La información
+  // ordinaria ya está integrada en la tarjeta de cada apartamento.
+  const avisos = [];
+  reservas
+    .filter(function(r) {
+      const k = dateKey(r.entrada);
+      return k === kHoy || k === kMan;
+    })
+    .sort(function(a,b) { return a.entrada - b.entrada; })
+    .forEach(function(r) {
+      const esHoy = dateKey(r.entrada) === kHoy;
+      const apto = (APTOS[r.aptoIdx] || APTOS[0]).alias;
+      const estado = getEstadoReserva(r.id);
+      const ciLocal = getCIReserva(r.id);
+      const checkinRecibido = !!estado.checkinRecibido || !!ciLocal;
+      const hora = horaLlegadaReserva(r.id);
+      const fuenteLimpieza = reservaLimpiezaParaLlegada(r);
+      const reservaLimpieza = fuenteLimpieza || r;
+      const estadoLimpieza = getEstadoReserva(reservaLimpieza.id);
+      const limpio = estadoLimpieza.limpiezaEstado === 'limpio';
+      const verificado = limpio && estado.verificacionEstado === 'verificado';
+      const prefijo = esHoy ? 'Llega hoy' : 'Llega mañana';
+      const prioridad = esHoy ? 'urgente' : 'pendiente';
 
-  const alertas=[];
-  reservas.forEach(r=>{
-    const mismo=reservas.find(x=>x.id!==r.id&&x.aptoIdx===r.aptoIdx&&dateKey(x.entrada)===dateKey(r.salida));
-    if(mismo&&dateKey(r.salida)>=kHoy)
-      alertas.push(`&#128308; <strong>Turnover</strong>: ${APTOS[r.aptoIdx]?.alias} el ${fmtDate(r.salida)} \u2014 sale ${r.huesped}, entra ${mismo.huesped}`);
-  });
-  // Mensajes para Airbnb
+      if (!hora) {
+        avisos.push({
+          clase: prioridad,
+          icono: '&#128336;',
+          titulo: 'Falta la hora de llegada',
+          detalle: escapeHtmlClient(r.huesped) + ' · ' + escapeHtmlClient(apto) + ' · ' + prefijo.toLowerCase(),
+          accion: "cambiarHoraLlegada('" + r.id + "')",
+          boton: 'Añadir hora'
+        });
+      }
+
+      if (!checkinRecibido) {
+        avisos.push({
+          clase: prioridad,
+          icono: '&#128273;',
+          titulo: 'Check-in pendiente',
+          detalle: escapeHtmlClient(r.huesped) + ' · ' + escapeHtmlClient(apto) + ' · ' + prefijo.toLowerCase(),
+          accion: "openModal('" + r.id + "')",
+          boton: 'Ver reserva'
+        });
+      }
+
+      if (esHoy && !limpio) {
+        avisos.push({
+          clase: 'urgente',
+          icono: '&#129529;',
+          titulo: 'Piso pendiente de limpieza',
+          detalle: escapeHtmlClient(apto) + ' · llegada de ' + escapeHtmlClient(r.huesped) + (hora ? ' a las ' + escapeHtmlClient(hora) : ''),
+          accion: "cambiarEstadoLimpieza('" + reservaLimpieza.id + "','limpio',this)",
+          boton: 'Marcar limpio'
+        });
+      } else if (esHoy && limpio && !verificado) {
+        avisos.push({
+          clase: 'pendiente',
+          icono: '&#128269;',
+          titulo: 'Falta la verificación final',
+          detalle: escapeHtmlClient(apto) + ' · llegada de ' + escapeHtmlClient(r.huesped) + (hora ? ' a las ' + escapeHtmlClient(hora) : ''),
+          accion: "cambiarEstadoVerificacion('" + r.id + "','verificado',this)",
+          boton: 'Marcar verificado'
+        });
+      }
+    });
+
+  const alertasBlock = document.getElementById('alertas-block');
+  if (alertasBlock) {
+    alertasBlock.innerHTML = avisos.length
+      ? '<div class="avisos-importantes"><div class="prep-section-title"><h2>&#9888;&#65039; Avisos importantes</h2><span>Solo tareas que requieren atención</span></div>'
+        + avisos.map(function(a) {
+          return '<div class="aviso-operativo ' + a.clase + '">'
+            + '<div class="aviso-operativo-icon">' + a.icono + '</div>'
+            + '<div class="aviso-operativo-body"><strong>' + a.titulo + '</strong><span>' + a.detalle + '</span></div>'
+            + '<button class="btn-operativo hour" onclick="' + a.accion + '">' + a.boton + '</button>'
+            + '</div>';
+        }).join('') + '</div>'
+      : '';
+  }
+
+  // Los mensajes de Airbnb se mantienen con su flujo de copia y sincronización.
   renderMensajesAirbnb();
-
-  document.getElementById('alertas-block').innerHTML = alertas.length ?
-    `<div class="card" style="border-left:4px solid var(--coral)"><div class="card-title">Alertas</div>${alertas.map(a=>`<div style="padding:8px 0;font-size:.85rem;border-bottom:1px solid var(--gris-2)">${a}</div>`).join('')}</div>` : '';
 }
 
 function renderLlegadas(items) {
