@@ -515,6 +515,45 @@
   .aviso-operativo { align-items: flex-start; flex-wrap: wrap; }
   .aviso-operativo .btn-operativo { margin-left: 42px; }
 }
+
+
+  /* PLANIFICACIÓN MENSUAL DE LIMPIEZAS */
+  .cleaning-page-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+  .cleaning-page-head h2 { font-family:var(--font-disp); font-size:1.3rem; color:var(--mar-deep); margin:0 0 4px; }
+  .cleaning-page-head p { margin:0; color:var(--gris-4); font-size:.82rem; line-height:1.4; }
+  .cleaning-controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .cleaning-month-input { border:2px solid var(--gris-3); border-radius:9px; padding:8px 10px; font-size:.9rem; color:var(--gris-5); background:#fff; min-height:40px; }
+  .cleaning-rule-note { background:#FFF7ED; border:1px solid #FDBA74; border-left:5px solid #EA580C; border-radius:12px; padding:12px 14px; margin-bottom:16px; color:#9A3412; font-size:.82rem; line-height:1.45; }
+  .cleaning-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:16px; }
+  .cleaning-summary-card { background:#fff; border:1px solid var(--gris-2); border-radius:12px; padding:12px; box-shadow:0 4px 14px rgba(15,23,42,.04); }
+  .cleaning-summary-card strong { display:block; font-size:1.25rem; color:var(--mar-deep); margin-bottom:2px; }
+  .cleaning-summary-card span { color:var(--gris-4); font-size:.73rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+  .cleaning-list { display:grid; gap:12px; }
+  .cleaning-card { background:#fff; border:1px solid var(--gris-2); border-left:5px solid var(--mar); border-radius:14px; padding:15px 16px; box-shadow:0 5px 16px rgba(15,23,42,.05); }
+  .cleaning-card.same-day { border-left-color:var(--coral); background:#FFF7F7; }
+  .cleaning-card.done { border-left-color:var(--verde); }
+  .cleaning-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:11px; }
+  .cleaning-card-date { font-weight:800; color:var(--gris-5); font-size:.98rem; text-transform:capitalize; }
+  .cleaning-card-apto { color:var(--mar); font-weight:700; font-size:.84rem; margin-top:3px; }
+  .cleaning-state { font-size:.7rem; font-weight:800; border-radius:999px; padding:4px 9px; white-space:nowrap; background:#FEF3C7; color:#92400E; }
+  .cleaning-state.done { background:#DCFCE7; color:#166534; }
+  .cleaning-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+  .cleaning-field { background:var(--gris-1); border-radius:9px; padding:9px 10px; min-width:0; }
+  .cleaning-field small { display:block; color:var(--gris-4); font-size:.66rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; margin-bottom:3px; }
+  .cleaning-field div { color:var(--gris-5); font-size:.8rem; line-height:1.35; overflow-wrap:anywhere; }
+  .cleaning-alert { margin-top:10px; border-radius:9px; padding:9px 11px; background:#FEE2E2; color:#991B1B; font-size:.79rem; font-weight:700; line-height:1.4; }
+  .cleaning-standard-note { margin-top:10px; color:var(--gris-4); font-size:.76rem; }
+  .cleaning-empty { background:#fff; border:1px dashed var(--gris-3); border-radius:14px; padding:28px 18px; text-align:center; color:var(--gris-4); }
+  .cleaning-last-pdf { margin-top:14px; font-size:.78rem; color:var(--gris-4); }
+  .cleaning-last-pdf a { color:var(--mar); font-weight:700; text-decoration:none; }
+  @media(max-width:720px) {
+    .cleaning-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .cleaning-grid { grid-template-columns:1fr; }
+    .cleaning-page-head .btn { width:100%; justify-content:center; }
+    .cleaning-controls { display:grid; grid-template-columns:auto 1fr auto; }
+    .cleaning-month-input { width:100%; min-width:0; }
+  }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -567,6 +606,7 @@
   <nav>
     <button class="active" onclick="showView('hoy')" id="tab-hoy">&#128203; Hoy</button>
     <button onclick="showView('calendario')" id="tab-calendario">&#128197; Calendario</button>
+    <button onclick="showView('limpiezas')" id="tab-limpiezas">&#129529; Limpiezas</button>
     <button onclick="showView('checkin')" id="tab-checkin">&#128273; Check&#8209;in</button>
     <button onclick="showView('gestion')" id="tab-gestion">&#128222; Reservas</button>
     <button onclick="showView('rendimiento')" id="tab-rendimiento">&#128200; Rendimiento</button>
@@ -599,6 +639,32 @@
         <div class="legend-item"><div class="legend-dot" style="background:var(--sol)"></div> Limpieza</div>
       </div>
       <div id="calendarios"></div>
+    </div>
+
+    <!-- LIMPIEZAS MENSUALES -->
+    <div class="view" id="view-limpiezas">
+      <div class="cleaning-page-head">
+        <div>
+          <h2>&#129529; Planificaci&#243;n mensual de limpiezas</h2>
+          <p>Selecciona el mes, revisa las salidas programadas y descarga el PDF para la empresa de limpieza.</p>
+        </div>
+        <button class="btn" id="btn-cleaning-pdf" onclick="descargarPdfLimpiezas()">&#11015;&#65039; Descargar PDF</button>
+      </div>
+
+      <div class="cleaning-controls">
+        <button class="btn btn-ghost btn-sm" onclick="cambiarMesPlanLimpiezas(-1)">&#8592;</button>
+        <input type="month" id="cleaning-month" class="cleaning-month-input" onchange="cambiarMesPlanDesdeSelector()">
+        <button class="btn btn-ghost btn-sm" onclick="cambiarMesPlanLimpiezas(1)">&#8594;</button>
+      </div>
+
+      <div class="cleaning-rule-note">
+        <strong>Horario operativo:</strong> salida antes de las <strong>11:00</strong> y entrada a partir de las <strong>14:00</strong>.
+        Todas las limpiezas deben realizarse en la fecha indicada. Los cambios de hu&#233;sped el mismo d&#237;a aparecen destacados.
+      </div>
+
+      <div id="cleaning-summary" class="cleaning-summary"></div>
+      <div id="cleaning-list" class="cleaning-list"></div>
+      <div id="cleaning-last-pdf" class="cleaning-last-pdf"></div>
     </div>
 
     <!-- CHECK-IN -->
@@ -784,6 +850,8 @@ let tokenClient = null;
 let accessToken = null;
 let currentMonth = new Date().getMonth();
 let currentYear  = new Date().getFullYear();
+let cleaningMonth = new Date().getMonth();
+let cleaningYear = new Date().getFullYear();
 let viajeroCount = 0;
 let selectedReservaId = null;
 let modalReservaId = null;
@@ -1159,6 +1227,7 @@ async function cargarDesdeMaestro() {
 
   renderHoy();
   if (document.getElementById('view-gestion')?.classList.contains('active')) renderGestion();
+  if (document.getElementById('view-limpiezas')?.classList.contains('active')) renderPlanLimpiezasMensual();
 
   if (errores.length) {
     setSyncState('error', 'Drive sincronizado · error parcial en el maestro');
@@ -1215,6 +1284,7 @@ async function cargarEstadoReservasBackend(silent) {
     localStorage.setItem('bnd_estado_reservas', JSON.stringify(map));
     renderHoy();
     if (document.getElementById('view-gestion')?.classList.contains('active')) renderGestion();
+    if (document.getElementById('view-limpiezas')?.classList.contains('active')) renderPlanLimpiezasMensual();
     return map;
   } catch (e) {
     try { estadoReservas = JSON.parse(localStorage.getItem('bnd_estado_reservas') || '{}'); } catch(_e) {}
@@ -1375,6 +1445,7 @@ function showView(id) {
   document.getElementById('view-' + id).classList.add('active');
   document.getElementById('tab-' + id).classList.add('active');
   if (id === 'calendario') renderCalendario();
+  if (id === 'limpiezas') renderPlanLimpiezasMensual();
 
   if (id === 'drive') { actualizarEstadoApiKey(); actualizarEstadoClaveOCR(); }
   if (id === 'gestion') renderGestion();
@@ -1957,6 +2028,201 @@ function renderCalGrid(year, month, hoy) {
   for(let i=1;i<=rem;i++) html+=`<div class="cal-day other-month"><div class="day-num"><div class="day-num-inner">${i}</div></div></div>`;
   html+='</div>';
   return html;
+}
+
+
+// ===============================================
+// PLANIFICACIÓN MENSUAL DE LIMPIEZAS
+// ===============================================
+function nombreMesEs(monthIndex) {
+  return ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][monthIndex] || '';
+}
+
+function fechaLimpiezaLarga(date) {
+  if (!date) return '';
+  return date.toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+
+function setSelectorMesLimpiezas() {
+  const input = document.getElementById('cleaning-month');
+  if (input) input.value = cleaningYear + '-' + String(cleaningMonth + 1).padStart(2, '0');
+}
+
+function cambiarMesPlanLimpiezas(delta) {
+  cleaningMonth += delta;
+  if (cleaningMonth > 11) { cleaningMonth = 0; cleaningYear++; }
+  if (cleaningMonth < 0) { cleaningMonth = 11; cleaningYear--; }
+  renderPlanLimpiezasMensual();
+}
+
+function cambiarMesPlanDesdeSelector() {
+  const value = document.getElementById('cleaning-month')?.value || '';
+  const match = value.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return;
+  cleaningYear = Number(match[1]);
+  cleaningMonth = Number(match[2]) - 1;
+  renderPlanLimpiezasMensual();
+}
+
+function planLimpiezasDelMes(year, monthIndex) {
+  return reservas
+    .filter(function(reservation) {
+      return reservation.salida && reservation.salida.getFullYear() === year && reservation.salida.getMonth() === monthIndex;
+    })
+    .map(function(reservation) {
+      const nextReservation = reservas
+        .filter(function(candidate) {
+          return candidate.id !== reservation.id &&
+            candidate.aptoIdx === reservation.aptoIdx &&
+            inicioDia(candidate.entrada).getTime() >= inicioDia(reservation.salida).getTime();
+        })
+        .sort(function(a, b) { return a.entrada - b.entrada; })[0] || null;
+
+      const sameDay = !!nextReservation && dateKey(nextReservation.entrada) === dateKey(reservation.salida);
+      const nextHour = nextReservation ? horaLlegadaReserva(nextReservation.id) : '';
+      const state = getEstadoReserva(reservation.id);
+      const apartment = APTOS[reservation.aptoIdx] || APTOS[0];
+
+      return {
+        reservation:reservation,
+        apartment:apartment.alias,
+        sameDay:sameDay,
+        nextReservation:nextReservation,
+        nextHour:nextHour,
+        done:state.limpiezaEstado === 'limpio'
+      };
+    })
+    .sort(function(a, b) {
+      return (a.reservation.salida - b.reservation.salida) || a.apartment.localeCompare(b.apartment, 'es');
+    });
+}
+
+function textoProximaEntradaLimpieza(item) {
+  if (!item.nextReservation) return 'Sin próxima reserva confirmada';
+  if (item.sameDay) {
+    return 'Mismo día · entrada desde las 14:00' +
+      (item.nextHour ? '<br><strong>Llegada prevista: ' + escapeHtmlClient(item.nextHour) + '</strong>' : '');
+  }
+  return fmtDate(item.nextReservation.entrada) + ' · entrada desde las 14:00' +
+    (item.nextHour ? '<br>Llegada prevista: ' + escapeHtmlClient(item.nextHour) : '');
+}
+
+function renderPlanLimpiezasMensual() {
+  setSelectorMesLimpiezas();
+  const list = document.getElementById('cleaning-list');
+  const summary = document.getElementById('cleaning-summary');
+  if (!list || !summary) return;
+
+  const plan = planLimpiezasDelMes(cleaningYear, cleaningMonth);
+  const countTomas = plan.filter(function(item){ return item.reservation.aptoIdx === 0; }).length;
+  const countBuenRetiro = plan.filter(function(item){ return item.reservation.aptoIdx === 1; }).length;
+  const sameDay = plan.filter(function(item){ return item.sameDay; }).length;
+
+  summary.innerHTML = `
+    <div class="cleaning-summary-card"><strong>${plan.length}</strong><span>Total limpiezas</span></div>
+    <div class="cleaning-summary-card"><strong>${countTomas}</strong><span>Tomás Ortuño</span></div>
+    <div class="cleaning-summary-card"><strong>${countBuenRetiro}</strong><span>Buen Retiro</span></div>
+    <div class="cleaning-summary-card"><strong>${sameDay}</strong><span>Cambios mismo día</span></div>`;
+
+  if (!plan.length) {
+    list.innerHTML = '<div class="cleaning-empty">No hay limpiezas programadas para ' +
+      nombreMesEs(cleaningMonth) + ' de ' + cleaningYear + '.</div>';
+    renderUltimoPdfLimpiezas();
+    return;
+  }
+
+  list.innerHTML = plan.map(function(item) {
+    const reservation = item.reservation;
+    const stateClass = item.done ? 'done' : '';
+    const statusText = item.done ? 'Realizada' : 'Pendiente';
+    const available = item.sameDay
+      ? 'Desde 11:00<br><strong>Listo antes de 14:00</strong>'
+      : 'Desde 11:00';
+    const note = item.sameDay
+      ? '<div class="cleaning-alert">⚠ Salida y entrada el mismo día. El apartamento debe estar preparado antes de las 14:00.</div>'
+      : '<div class="cleaning-standard-note">Limpieza programada para la fecha indicada.</div>';
+
+    return `<article class="cleaning-card ${item.sameDay ? 'same-day' : ''} ${stateClass}">
+      <div class="cleaning-card-head">
+        <div>
+          <div class="cleaning-card-date">${escapeHtmlClient(fechaLimpiezaLarga(reservation.salida))}</div>
+          <div class="cleaning-card-apto">${escapeHtmlClient(item.apartment)}</div>
+        </div>
+        <span class="cleaning-state ${stateClass}">${statusText}</span>
+      </div>
+      <div class="cleaning-grid">
+        <div class="cleaning-field"><small>Disponible</small><div>${available}</div></div>
+        <div class="cleaning-field"><small>Próxima entrada</small><div>${textoProximaEntradaLimpieza(item)}</div></div>
+        <div class="cleaning-field"><small>Regla</small><div>La limpieza se realiza en la fecha de salida.</div></div>
+      </div>
+      ${note}
+    </article>`;
+  }).join('');
+
+  renderUltimoPdfLimpiezas();
+}
+
+function renderUltimoPdfLimpiezas() {
+  const container = document.getElementById('cleaning-last-pdf');
+  if (!container) return;
+  let last = null;
+  try { last = JSON.parse(localStorage.getItem('bnd_last_cleaning_pdf') || 'null'); } catch (_e) {}
+  if (!last) { container.innerHTML = ''; return; }
+
+  const key = cleaningYear + '-' + String(cleaningMonth + 1).padStart(2, '0');
+  if (last.monthKey !== key) { container.innerHTML = ''; return; }
+  const when = last.generatedAt ? new Date(last.generatedAt).toLocaleString('es-ES') : '';
+  container.innerHTML = 'Último PDF generado: <strong>' + escapeHtmlClient(when) + '</strong>' +
+    (last.driveUrl ? ' · <a href="' + escapeHtmlClient(last.driveUrl) + '" target="_blank" rel="noopener">Ver copia en Drive</a>' : '');
+}
+
+function descargarBase64ComoPdf(base64, fileName, mimeType) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const blob = new Blob([bytes], {type:mimeType || 'application/pdf'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName || 'Planificacion_limpiezas.pdf';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 30000);
+}
+
+async function descargarPdfLimpiezas() {
+  const button = document.getElementById('btn-cleaning-pdf');
+  if (button) { button.disabled = true; button.textContent = 'Generando PDF...'; }
+
+  try {
+    const payload = {
+      action:'generarPlanLimpiezasPdf',
+      year:cleaningYear,
+      month:cleaningMonth + 1,
+      actor:actorActual()
+    };
+    const response = await jsonpRequest(
+      APPS_SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload)),
+      60000
+    );
+    if (!response || !response.ok) throw new Error(response?.error || 'No se pudo generar el PDF');
+    if (!response.base64) throw new Error('Apps Script no devolvió el archivo PDF');
+
+    descargarBase64ComoPdf(response.base64, response.fileName, response.mimeType);
+    localStorage.setItem('bnd_last_cleaning_pdf', JSON.stringify({
+      monthKey:cleaningYear + '-' + String(cleaningMonth + 1).padStart(2, '0'),
+      generatedAt:response.generatedAt || new Date().toISOString(),
+      driveUrl:response.driveUrl || '',
+      fileName:response.fileName || ''
+    }));
+    renderUltimoPdfLimpiezas();
+    showToast('✓ PDF generado y descargado · ' + response.total + ' limpiezas', 'success');
+  } catch (error) {
+    showToast('No se pudo generar el PDF: ' + error.message, 'error');
+  } finally {
+    if (button) { button.disabled = false; button.innerHTML = '&#11015;&#65039; Descargar PDF'; }
+  }
 }
 
 // ===============================================
