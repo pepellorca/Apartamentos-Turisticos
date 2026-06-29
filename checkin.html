@@ -168,7 +168,7 @@ canvas.firma-canvas { display: block; width: 100%; height: 120px; cursor: crossh
     <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
 
     <div class="reserva-info">
-      <h2 data-t="reserva_title">&#128203; Tu reserva</h2>
+      <h2 data-t="reserva_title">&#128203; Tu reserva en Airbnb</h2>
       <div class="reserva-grid">
         <div class="reserva-item"><label data-t="label_apto">Apartamento</label><span id="info-apto">—</span></div>
         <div class="reserva-item"><label data-t="label_codigo">Código</label><span id="info-codigo">—</span></div>
@@ -181,7 +181,7 @@ canvas.firma-canvas { display: block; width: 100%; height: 120px; cursor: crossh
 
     <div class="rgpd-box">
       <h3 data-t="rgpd_title">&#128274; Protección de datos · RD 933/2021</h3>
-      <p data-t="rgpd_text">Los datos que facilitas son necesarios para el cumplimiento del Real Decreto 933/2021 sobre registro de viajeros. Responsable: Pepe Llorca. Finalidad: registro obligatorio de viajeros y comunicación al Ministerio del Interior (SES.HOSPEDAJES). Conservación: 3 años. Tienes derecho de acceso, rectificación y supresión conforme al RGPD.</p>
+      <p data-t="rgpd_text">Los datos que facilitas son necesarios para el cumplimiento del Real Decreto 933/2021 sobre registro de viajeros. Responsable: Vicenta María Beltran SL. Finalidad: registro obligatorio de viajeros y comunicación al Ministerio del Interior (SES.HOSPEDAJES). Conservación: 3 años. Tienes derecho de acceso, rectificación y supresión conforme al RGPD.</p>
       <label class="rgpd-check">
         <input type="checkbox" id="rgpd-check" onchange="updateProgress()">
         <span data-t="rgpd_accept">He leído y acepto el tratamiento de mis datos personales conforme a la normativa vigente.</span>
@@ -235,11 +235,11 @@ const T = {
     loading: 'Cargando reserva...',
     error_title: 'Enlace no v\u00E1lido',
     error_desc: 'Este enlace de check-in no es v\u00E1lido o ha expirado. Contacta con el propietario.',
-    reserva_title: '&#128203; Tu reserva',
+    reserva_title: '&#128203; Tu reserva en Airbnb',
     label_apto: 'Apartamento', label_codigo: 'C\u00F3digo', label_entrada: 'Check-in',
     label_salida: 'Check-out', label_huesped: 'Titular', label_noches: 'Noches',
     rgpd_title: '&#128274; Protecci\u00F3n de datos \u00B7 RD 933/2021',
-    rgpd_text: 'Los datos que facilitas son necesarios para el cumplimiento del Real Decreto 933/2021 sobre registro de viajeros. Responsable: Pepe Llorca. Finalidad: registro obligatorio de viajeros y comunicaci\u00F3n al Ministerio del Interior (SES.HOSPEDAJES). Conservaci\u00F3n: 3 a\u00F1os. Tienes derecho de acceso, rectificaci\u00F3n y supresi\u00F3n conforme al RGPD.',
+    rgpd_text: 'Los datos que facilitas son necesarios para el cumplimiento del Real Decreto 933/2021 sobre registro de viajeros. Responsable: Vicenta María Beltran SL. Finalidad: registro obligatorio de viajeros y comunicaci\u00F3n al Ministerio del Interior (SES.HOSPEDAJES). Conservaci\u00F3n: 3 a\u00F1os. Tienes derecho de acceso, rectificaci\u00F3n y supresi\u00F3n conforme al RGPD.',
     rgpd_accept: 'He le\u00EDdo y acepto el tratamiento de mis datos personales conforme a la normativa vigente.',
     btn_add_viajero: 'A\u00F1adir viajero',
     nota_firma: '&#9888;&#65039; Todos los viajeros mayores de 14 a\u00F1os deben firmar este formulario. Los menores de 14 a\u00F1os no firman, pero sus datos deben ser introducidos por un adulto.',
@@ -273,11 +273,11 @@ const T = {
     loading: 'Loading reservation...',
     error_title: 'Invalid link',
     error_desc: 'This check-in link is invalid or has expired. Please contact the property owner.',
-    reserva_title: '&#128203; Your reservation',
+    reserva_title: '&#128203; Your Airbnb reservation',
     label_apto: 'Apartment', label_codigo: 'Code', label_entrada: 'Check-in',
     label_salida: 'Check-out', label_huesped: 'Guest', label_noches: 'Nights',
     rgpd_title: '&#128274; Data Protection \u00B7 RD 933/2021',
-    rgpd_text: 'The data you provide is required for compliance with Spanish Royal Decree 933/2021 on traveller registration. Data controller: Pepe Llorca. Purpose: mandatory traveller registration and communication to the Spanish Ministry of Interior (SES.HOSPEDAJES). Retention: 3 years. You have the right of access, rectification and erasure under GDPR.',
+    rgpd_text: 'The data you provide is required for compliance with Spanish Royal Decree 933/2021 on traveller registration. Data controller: Vicenta María Beltran SL. Purpose: mandatory traveller registration and communication to the Spanish Ministry of Interior (SES.HOSPEDAJES). Retention: 3 years. You have the right of access, rectification and erasure under GDPR.',
     rgpd_accept: 'I have read and accept the processing of my personal data in accordance with current regulations.',
     btn_add_viajero: 'Add traveller',
     nota_firma: '&#9888;&#65039; All travellers aged 14 and over must sign this form. Children under 14 do not sign, but their data must be entered by an accompanying adult.',
@@ -311,11 +311,11 @@ const T = {
     loading: 'Chargement de la r\u00E9servation...',
     error_title: 'Lien invalide',
     error_desc: 'Ce lien de check-in est invalide ou a expir\u00E9. Contactez le propri\u00E9taire.',
-    reserva_title: '&#128203; Votre r\u00E9servation',
+    reserva_title: '&#128203; Votre r\u00E9servation Airbnb',
     label_apto: 'Appartement', label_codigo: 'Code', label_entrada: 'Check-in',
     label_salida: 'Check-out', label_huesped: 'Titulaire', label_noches: 'Nuits',
     rgpd_title: '&#128274; Protection des donn\u00E9es \u00B7 RD 933/2021',
-    rgpd_text: 'Les donn\u00E9es que vous fournissez sont n\u00E9cessaires pour se conformer au D\u00E9cret Royal espagnol 933/2021 sur l\'enregistrement des voyageurs. Responsable: Pepe Llorca. Finalit\u00E9: enregistrement obligatoire des voyageurs et communication au Minist\u00E8re de l\'Int\u00E9rieur espagnol (SES.HOSPEDAJES). Conservation: 3 ans. Vous disposez des droits d\'acc\u00E8s, rectification et effacement conform\u00E9ment au RGPD.',
+    rgpd_text: 'Les donn\u00E9es que vous fournissez sont n\u00E9cessaires pour se conformer au D\u00E9cret Royal espagnol 933/2021 sur l\'enregistrement des voyageurs. Responsable: Vicenta María Beltran SL. Finalit\u00E9: enregistrement obligatoire des voyageurs et communication au Minist\u00E8re de l\'Int\u00E9rieur espagnol (SES.HOSPEDAJES). Conservation: 3 ans. Vous disposez des droits d\'acc\u00E8s, rectification et effacement conform\u00E9ment au RGPD.',
     rgpd_accept: 'J\'ai lu et j\'accepte le traitement de mes donn\u00E9es personnelles conform\u00E9ment \u00E0 la r\u00E9glementation en vigueur.',
     btn_add_viajero: 'Ajouter un voyageur',
     nota_firma: '&#9888;&#65039; Tous les voyageurs de 14 ans et plus doivent signer ce formulaire. Les enfants de moins de 14 ans ne signent pas, mais leurs donn\u00E9es doivent \u00EAtre saisies par un adulte accompagnateur.',
@@ -349,11 +349,11 @@ const T = {
     loading: 'Buchung wird geladen...',
     error_title: 'Ung\u00FCltiger Link',
     error_desc: 'Dieser Check-in-Link ist ung\u00FCltig oder abgelaufen. Bitte kontaktieren Sie den Eigent\u00FCmer.',
-    reserva_title: '&#128203; Ihre Buchung',
+    reserva_title: '&#128203; Ihre Airbnb-Buchung',
     label_apto: 'Wohnung', label_codigo: 'Code', label_entrada: 'Check-in',
     label_salida: 'Check-out', label_huesped: 'G\u00E4ste', label_noches: 'N\u00E4chte',
     rgpd_title: '&#128274; Datenschutz \u00B7 RD 933/2021',
-    rgpd_text: 'Die von Ihnen gemachten Angaben sind f\u00FCr die Erf\u00FCllung der spanischen K\u00F6niglichen Verordnung 933/2021 \u00FCber die Registrierung von Reisenden erforderlich. Verantwortlicher: Pepe Llorca. Zweck: Pflichtregistrierung von Reisenden und \u00DCbermittlung an das spanische Innenministerium (SES.HOSPEDAJES). Aufbewahrung: 3 Jahre. Sie haben das Recht auf Zugang, Berichtigung und L\u00F6schung gem\u00E4\u00DF DSGVO.',
+    rgpd_text: 'Die von Ihnen gemachten Angaben sind f\u00FCr die Erf\u00FCllung der spanischen K\u00F6niglichen Verordnung 933/2021 \u00FCber die Registrierung von Reisenden erforderlich. Verantwortlicher: Vicenta María Beltran SL. Zweck: Pflichtregistrierung von Reisenden und \u00DCbermittlung an das spanische Innenministerium (SES.HOSPEDAJES). Aufbewahrung: 3 Jahre. Sie haben das Recht auf Zugang, Berichtigung und L\u00F6schung gem\u00E4\u00DF DSGVO.',
     rgpd_accept: 'Ich habe die Datenschutzerkl\u00E4rung gelesen und stimme der Verarbeitung meiner personenbezogenen Daten gem\u00E4\u00DF den geltenden Vorschriften zu.',
     btn_add_viajero: 'Reisenden hinzuf\u00FCgen',
     nota_firma: '&#9888;&#65039; Alle Reisenden ab 14 Jahren m\u00FCssen dieses Formular unterzeichnen. Kinder unter 14 Jahren unterschreiben nicht, aber ihre Daten m\u00FCssen von einem begleitenden Erwachsenen eingetragen werden.',
@@ -772,7 +772,12 @@ async function ocrDoc(event) {
     }
   } catch(e) {
     if (status) status.style.display = 'none';
-    alert('Error al leer el documento: ' + e.message);
+    const detalle = String(e && e.message || e);
+    if (detalle.includes('OPENAI_API_KEY') || detalle.includes('LLM_API_KEY')) {
+      alert('El OCR todavía no está configurado en Apps Script. Añade una propiedad de secuencia de comandos llamada OPENAI_API_KEY con una clave válida de OpenAI y vuelve a intentarlo.');
+    } else {
+      alert('Error al leer el documento: ' + detalle);
+    }
   }
 }
 

@@ -180,6 +180,11 @@
   .event-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 8px; background: var(--gris-1); border-left: 4px solid var(--gris-3); cursor: pointer; transition: transform .15s; }
   .event-item:hover { transform: translateX(2px); }
   .event-item.llegada  { border-color: var(--verde); background: #F0FFF4; }
+  .event-item.llegada-hoy { border-color: var(--verde); background: #F0FFF4; }
+  .event-item.llegada-manana { border-color: var(--mar); background: #EFF9FF; }
+  .llegada-estado { display:inline-flex; align-items:center; padding:2px 8px; border-radius:20px; font-size:.7rem; font-weight:700; margin-top:4px; }
+  .llegada-estado.hoy { background:#DCFCE7; color:#166534; }
+  .llegada-estado.manana { background:#DBEAFE; color:#1E40AF; }
   .event-item.salida   { border-color: var(--coral); background: #FFF5F5; }
   .event-item.limpieza { border-color: var(--sol);   background: #FFFBEB; }
   .event-item.limpieza-aviso { border-color: var(--sol); background: #FFFBEB; }
@@ -348,6 +353,9 @@
   .msg-tipo.bienvenida { background: #DCFCE7; color: #166534; }
   .msg-tipo.despedida  { background: #FEF9C3; color: #854D0E; }
   .msg-texto { background: var(--gris-1); border-radius: 8px; padding: 12px 14px; font-size: .83rem; line-height: 1.7; color: var(--gris-5); white-space: pre-wrap; border-left: 3px solid var(--mar); margin-bottom: 10px; }
+  .msg-texto a { color: var(--mar-deep); font-weight: 700; text-decoration: underline; word-break: break-all; }
+  .msg-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .btn-abrir-checkin { background:#fff; color:var(--mar); border:2px solid var(--mar); border-radius:6px; padding:6px 12px; font-size:.8rem; font-weight:700; text-decoration:none; }
   .btn-copiar { background: var(--mar); color: #fff; border: none; border-radius: 6px; padding: 7px 14px; font-size: .8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: background .2s; }
   .btn-copiar:hover { background: var(--mar-deep); }
   .btn-copiar.copiado { background: var(--verde); }
@@ -470,14 +478,11 @@
       <div id="estado-aptos-block"></div>
       <div id="mensajes-airbnb-block"></div>
       <div class="today-grid">
-        <div><div class="card-title">&#128994; Llegadas hoy</div><div class="event-list" id="list-llegadas-hoy"></div></div>
+        <div><div class="card-title">&#128994; Llegadas</div><div class="event-list" id="list-llegadas"></div></div>
         <div><div class="card-title">&#128308; Salidas hoy</div><div class="event-list" id="list-salidas-hoy"></div></div>
       </div>
       <div style="height:16px"></div>
-      <div class="today-grid">
-        <div><div class="card-title">&#128994; Llegadas ma&#241;ana</div><div class="event-list" id="list-llegadas-manana"></div></div>
-        <div><div class="card-title">&#129529; Limpiezas</div><div class="event-list" id="list-limpiezas"></div></div>
-      </div>
+      <div><div class="card-title">&#129529; Limpiezas</div><div class="event-list" id="list-limpiezas"></div></div>
       <div style="height:16px"></div>
       <div id="alertas-block"></div>
     </div>
@@ -662,6 +667,7 @@ const CLIENT_ID = '1089794111861-0aom7g1gph610kf1i22s7rbkcktq9dgs.apps.googleuse
 const DRIVE_FOLDER_ID = '1wIxPwPH3GulG6wZe_cV956LXxajd8au8'; // Carpeta "Airbnb CSV" fija
 const OPENAI_API_KEY = ''; // Nunca publiques una clave de OpenAI en el HTML
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQ7eog7rWAciUQD46krqZj2CIir37YGnxkv3U8CcxC6D2Pkg1cYGjVtSKH2XftADPmXg/exec';
+const PUBLIC_CHECKIN_BASE_URL = 'https://pepellorca.github.io/Apartamentos-Turisticos/checkin.html';
 // Sustituye el valor anterior por la URL /exec de la NUEVA implementación antes de publicar.
 const EMAILS_AUTORIZADOS = [
   'pepe.llorca@gmail.com',
@@ -688,6 +694,8 @@ let viajeroCount = 0;
 let selectedReservaId = null;
 let modalReservaId = null;
 let maestroAptos = {}; // Datos fijos leídos desde la pestaña Maestro
+let maestroSyncTimer = null;
+let mensajesBackendSyncEnCurso = false;
 
 // ===============================================
 // CLOCK
@@ -801,8 +809,8 @@ function mostrarApp(user) {
   // Drive y Google Sheets se sincronizan de forma independiente.
   // Así, un fallo en los CSV no impide cargar check-ins y comunicaciones.
   setTimeout(function() {
-    cargarDesdeMaestro();
     syncDrive();
+    iniciarSincronizacionMensajes();
   }, 500);
 }
 
@@ -824,6 +832,7 @@ document.addEventListener('click', function(e) {
 function signOut() {
   if (accessToken) { try { google.accounts.oauth2.revoke(accessToken); } catch(e){} }
   accessToken = null;
+  if (maestroSyncTimer) { clearInterval(maestroSyncTimer); maestroSyncTimer = null; }
   localStorage.removeItem('bnd_token');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
@@ -891,6 +900,7 @@ async function syncDrive() {
       showToast(mensaje, 'error');
       // El maestro sigue sincronizándose aunque falte un CSV.
       await cargarDesdeMaestro();
+      await cargarMensajesDesdeBackend(true);
       return;
     }
 
@@ -921,6 +931,8 @@ async function syncDrive() {
 
     setSyncState('ok', `${reservas.length} reservas \u2022 Actualizado ${new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'})}`);
     showToast(`\u2713 ${reservas.length} reservas cargadas desde Drive`, 'success');
+    await cargarDesdeMaestro();
+    await cargarMensajesDesdeBackend(true);
     renderHoy();
     renderStatsCard();
 
@@ -1053,6 +1065,45 @@ async function cargarDesdeMaestro() {
   }
   return { maestro: maestroCargado, mensajes: mensajesCargados, checkins: checkinsCargados, errores };
 }
+
+async function cargarMensajesDesdeBackend(silent) {
+  if (mensajesBackendSyncEnCurso) return;
+  mensajesBackendSyncEnCurso = true;
+  try {
+    const url = APPS_SCRIPT_URL + '?action=getMensajesEnviados';
+    const resp = await jsonpRequest(url, 15000);
+    if (!resp || !resp.ok) throw new Error(resp?.error || 'No se pudieron leer los mensajes enviados');
+
+    const remoto = {};
+    (resp.mensajes || []).forEach(function(item) {
+      const key = String(item.key || '');
+      const parts = key.split('|');
+      if (parts.length >= 3 && parts[0] === 'MSG') remoto[parts[1] + '_' + parts[2]] = item.fecha || '';
+    });
+
+    const local = JSON.parse(localStorage.getItem('bnd_msgs') || '{}');
+    const merged = Object.assign({}, local, remoto);
+    localStorage.setItem('bnd_msgs', JSON.stringify(merged));
+    window._msgsCache = merged;
+    renderMensajesAirbnb();
+    if (document.getElementById('view-gestion')?.classList.contains('active')) renderGestion();
+    return merged;
+  } catch (e) {
+    if (!silent) showToast('No se pudieron sincronizar los mensajes: ' + e.message, 'error');
+    return null;
+  } finally {
+    mensajesBackendSyncEnCurso = false;
+  }
+}
+
+function iniciarSincronizacionMensajes() {
+  if (maestroSyncTimer) clearInterval(maestroSyncTimer);
+  maestroSyncTimer = setInterval(function() { cargarMensajesDesdeBackend(true); }, 60000);
+}
+
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden && document.getElementById('app')?.style.display !== 'none') cargarMensajesDesdeBackend(true);
+});
 
 function setSyncState(state, text) {
   const dot  = document.getElementById('sync-dot');
@@ -1239,9 +1290,11 @@ function renderHoy() {
 
   renderEstadoAptos();
 
-  renderEventList('list-llegadas-hoy',    llegadasHoy,    'llegada');
-  renderEventList('list-salidas-hoy',     salidasHoy,     'salida');
-  renderEventList('list-llegadas-manana', llegadasManana, 'llegada');
+  renderLlegadas([
+    ...llegadasHoy.map(r => ({reserva:r, estado:'hoy'})),
+    ...llegadasManana.map(r => ({reserva:r, estado:'manana'}))
+  ]);
+  renderEventList('list-salidas-hoy', salidasHoy, 'salida');
   renderLimpiezas(estadosLimpieza);
 
   const alertas=[];
@@ -1255,6 +1308,39 @@ function renderHoy() {
 
   document.getElementById('alertas-block').innerHTML = alertas.length ?
     `<div class="card" style="border-left:4px solid var(--coral)"><div class="card-title">Alertas</div>${alertas.map(a=>`<div style="padding:8px 0;font-size:.85rem;border-bottom:1px solid var(--gris-2)">${a}</div>`).join('')}</div>` : '';
+}
+
+function renderLlegadas(items) {
+  const el = document.getElementById('list-llegadas');
+  if (!el) return;
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state"><span class="emoji">&#127749;</span>Sin llegadas hoy ni ma&ntilde;ana</div>';
+    return;
+  }
+
+  const orden = { hoy:0, manana:1 };
+  items = items.slice().sort(function(a,b) {
+    if (orden[a.estado] !== orden[b.estado]) return orden[a.estado] - orden[b.estado];
+    return a.reserva.entrada - b.reserva.entrada;
+  });
+
+  const cfg = {
+    hoy: { clase:'llegada-hoy', badge:'hoy', icon:'&#128994;', titulo:'Llega hoy' },
+    manana: { clase:'llegada-manana', badge:'manana', icon:'&#128309;', titulo:'Llega ma&ntilde;ana' }
+  };
+
+  el.innerHTML = items.map(function(item) {
+    const r = item.reserva;
+    const apto = APTOS[r.aptoIdx] || APTOS[0];
+    const c = cfg[item.estado];
+    return `<div class="event-item ${c.clase}" onclick="openModal('${r.id}')">`
+      + `<div class="event-icon">${c.icon}</div>`
+      + '<div class="event-body">'
+      + `<div class="event-name">${r.huesped}</div>`
+      + `<div class="event-meta">${apto.alias} &bull; ${r.noches} noches</div>`
+      + `<span class="llegada-estado ${c.badge}">${c.titulo}</span>`
+      + '</div></div>';
+  }).join('');
 }
 
 function renderLimpiezas(items) {
@@ -1722,114 +1808,145 @@ function mostrarConfigApiKey() {
 // ===============================================
 // MENSAJES PARA AIRBNB EN VISTA HOY
 // ===============================================
+function escapeHtmlClient(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function formatMensajeHtml(msg) {
+  let html = escapeHtmlClient(msg.texto);
+  if (msg.url) {
+    const safeUrl = escapeHtmlClient(msg.url);
+    html = html.replace(safeUrl, '<a href="' + safeUrl + '" target="_blank" rel="noopener">' + safeUrl + '</a>');
+  }
+  return html.replace(/\n/g, '<br>');
+}
+
 function renderMensajesAirbnb() {
   const hoy = new Date(); hoy.setHours(0,0,0,0);
   const msgs = [];
 
   reservas.forEach(function(r) {
     const diasLlegada = Math.round((r.entrada - hoy) / 86400000);
-    const diasSalida  = Math.round((r.salida  - hoy) / 86400000);
+    const diasSalida = Math.round((r.salida - hoy) / 86400000);
     const apto = APTOS[r.aptoIdx] || APTOS[0];
     const nombre = r.huesped.split(' ')[0];
     const m = getMaestroApto(r.aptoIdx);
-    const maps     = m['google maps'] || apto.maps || '';
-    const checkin  = m['check-in']  || apto.checkin  || '14:00';
+    const maps = m['google maps'] || apto.maps || '';
+    const direccion = m['direccion'] || apto.direccion || '';
+    const checkin = m['check-in'] || apto.checkin || '14:00';
     const checkout = m['check-out'] || apto.checkout || '11:00';
-    const persona  = m['persona entrada'] || 'Mi padre, Domingo';
-    const wifi     = m['wifi']       || apto.wifi    || '';
-    const pass     = m['contrasena'] || apto.wifiPass || '';
-    const url = 'https://pepellorca.github.io/benidorm-apartaments/checkin.html'
-      + '?r=' + encodeURIComponent(r.id)
-      + '&h=' + encodeURIComponent(r.huesped || '')
-      + '&a=' + encodeURIComponent(apto.alias || '')
-      + '&e=' + encodeURIComponent(fmtDate(r.entrada))
-      + '&s=' + encodeURIComponent(fmtDate(r.salida))
-      + '&n=' + encodeURIComponent(r.noches || '');
+    const persona = m['persona entrada'] || 'Mi padre, Domingo';
+    const wifi = m['wifi'] || apto.wifi || '';
+    const pass = m['contrasena'] || apto.wifiPass || '';
+    const url = buildCheckinUrl(r);
+    const mapsLinea = maps ? '📍 ' + maps + '\n\n' : '';
 
-    // MSG 1: Bienvenida (5-7 dias antes)
-    if (diasLlegada >= 5 && diasLlegada <= 7) {
-      msgs.push({ tipo: 'bienvenida', sub: 'Enviar ahora \u00B7 llegan en ' + diasLlegada + ' d\u00EDas', huesped: r.huesped, apto: apto.alias,
-        texto: 'Buenos d\u00EDas ' + nombre + ',\n\n'
-          + 'Nos alegramos de que hay\u00E1is elegido nuestro apartamento para vuestras vacaciones en Benidorm!\n\n'
-          + 'Os confirmamos vuestra reserva:\n'
-          + '\uD83D\uDCCD ' + apto.alias + (apto.direccion ? ' \u00B7 ' + apto.direccion : '') + '\n'
-          + '\uD83D\uDCC5 Entrada: ' + fmtDate(r.entrada) + ' \u00B7 Salida: ' + fmtDate(r.salida) + ' \u00B7 ' + r.noches + ' noches\n'
-          + '\uD83D\uDD50 Check-in a partir de las ' + checkin + '\n'
-          + '\uD83D\uDD50 Check-out antes de las ' + checkout + '\n\n'
-          + 'Para agilizar el check-in, pod\u00E9is rellenar vuestros datos con antelaci\u00F3n (solo tarda 2 minutos):\n'
-          + url + '\n\n'
-          + 'Cumplimos con la normativa de protecci\u00F3n de datos (RD 933/2021 y RGPD).\n\n'
-          + 'Cualquier duda estamos a vuestra disposici\u00F3n.\n'
-          + '\u00A1Hasta pronto!\nPepe'
+    if (diasLlegada >= 5 && diasLlegada <= 7 && !getMsgEnviado(r.id, 'bienvenida')) {
+      msgs.push({
+        rid:r.id, tipo:'bienvenida', url:url,
+        sub:'Enviar ahora · llegan en ' + diasLlegada + ' días',
+        huesped:r.huesped, apto:apto.alias,
+        texto:`Buenos días ${nombre},
+
+Nos alegramos de que hayáis elegido nuestro apartamento para vuestras vacaciones en Benidorm!
+
+Os confirmamos vuestra reserva:
+📍 ${apto.alias}${direccion ? ' · ' + direccion : ''}
+📅 Entrada: ${fmtDate(r.entrada)} · Salida: ${fmtDate(r.salida)} · ${r.noches} noches
+🕐 Check-in a partir de las ${checkin}
+🕐 Check-out antes de las ${checkout}
+
+👉 Pulsa este enlace para completar el check-in antes de vuestra llegada:
+${url}
+
+Cumplimos con la normativa de protección de datos (RD 933/2021 y RGPD).
+
+Cualquier duda estamos a vuestra disposición.
+¡Hasta pronto!
+Pepe`
       });
     }
 
-    // MSG 2: Confirmacion dia anterior a llegada
-    if (diasLlegada === 1) {
+    if (diasLlegada === 1 && !getMsgEnviado(r.id, 'confirmacion')) {
       const checkins = JSON.parse(localStorage.getItem('bnd_checkins') || '[]');
       const tieneCI = checkins.some(function(c){ return c.reservaId === r.id; });
-      msgs.push({ tipo: 'confirmacion', sub: 'Enviar hoy \u00B7 llegan ma\u00F1ana', huesped: r.huesped, apto: apto.alias,
-        texto: 'Hola ' + nombre + ',\n\n'
-          + '\u00A1Ma\u00F1ana es el gran d\u00EDa!\n\n'
-          + '\uD83D\uDC49 ' + persona + ' os estar\u00E1 esperando en la puerta para la entrega de llaves. \u00BFSobre qu\u00E9 hora llegar\u00E9is?\n\n'
-          + (maps ? '\uD83D\uDCCD ' + maps + '\n\n' : '')
-          + '\uD83D\uDCF6 WiFi: ' + wifi + '\n'
-          + '\uD83D\uDD11 Contrase\u00F1a: ' + pass + '\n\n'
-          + (tieneCI
-              ? '\u2705 Hemos recibido vuestro registro de viajeros. \u00A1Gracias, todo en orden!'
-              : '\uD83D\uDCCB Recordad que a\u00FAn no hemos recibido el registro de viajeros. Pod\u00E9is completarlo aqu\u00ED:\n' + url)
-          + '\n\n\u00A1Hasta ma\u00F1ana!\nPepe'
+      const registroLinea = tieneCI
+        ? '✅ Hemos recibido vuestro registro de viajeros. ¡Gracias, todo en orden!'
+        : '📋 Aún no hemos recibido el registro de viajeros. Pulsa este enlace para completarlo:\n' + url;
+      msgs.push({
+        rid:r.id, tipo:'confirmacion', url:tieneCI ? '' : url,
+        sub:'Enviar hoy · llegan mañana', huesped:r.huesped, apto:apto.alias,
+        texto:`Hola ${nombre},
+
+¡Mañana es el gran día!
+
+👉 ${persona} os estará esperando en la puerta para la entrega de llaves. ¿Sobre qué hora llegaréis?
+
+${mapsLinea}📶 WiFi: ${wifi}
+🔑 Contraseña: ${pass}
+
+${registroLinea}
+
+¡Hasta mañana!
+Pepe`
       });
     }
 
-    // MSG 3: Despedida dia anterior a salida
-    if (diasSalida === 1) {
-      msgs.push({ tipo: 'despedida', sub: 'Enviar hoy \u00B7 salen ma\u00F1ana', huesped: r.huesped, apto: apto.alias,
-        texto: 'Hola ' + nombre + ',\n\n'
-          + 'Ha sido un placer tenerte con nosotros en Benidorm!\n\n'
-          + 'Esperamos que hayas disfrutado de tu estancia y que todo haya sido de tu agrado.\n\n'
-          + 'Si ha habido alguna cosa que no ha estado a la altura, me encantar\u00EDa saberlo para mejorarlo para pr\u00F3ximas visitas.\n\n'
-          + 'Recuerda que el check-out es ma\u00F1ana antes de las ' + checkout + '. Por favor, deja las llaves dentro del apartamento en el mueble de la entrada.\n\n'
-          + 'Si quer\u00E9is repetir, ya sab\u00E9is donde estamos \uD83D\uDE0A\n\n'
-          + '\u00A1Hasta pronto!\nPepe'
+    if (diasSalida === 1 && !getMsgEnviado(r.id, 'despedida')) {
+      msgs.push({
+        rid:r.id, tipo:'despedida', url:'',
+        sub:'Enviar hoy · salen mañana', huesped:r.huesped, apto:apto.alias,
+        texto:`Hola ${nombre},
+
+Ha sido un placer tenerte con nosotros en Benidorm!
+
+Esperamos que hayas disfrutado de tu estancia y que todo haya sido de tu agrado.
+
+Si ha habido alguna cosa que no ha estado a la altura, me encantaría saberlo para mejorarlo para próximas visitas.
+
+Recuerda que el check-out es mañana antes de las ${checkout}. Por favor, deja las llaves dentro del apartamento en el mueble de la entrada.
+
+Si queréis repetir, ya sabéis donde estamos 😊
+
+¡Hasta pronto!
+Pepe`
       });
     }
   });
 
+  window._todayMsgs = msgs;
   const block = document.getElementById('mensajes-airbnb-block');
   if (!msgs.length) { block.innerHTML = ''; return; }
 
   const cfg = {
-    bienvenida:   { icon: '\\uD83C\\uDF0A', label: 'Bienvenida',          cls: 'bienvenida' },
-    confirmacion: { icon: '\\uD83D\\uDCC5', label: 'Confirmaci\\u00F3n',  cls: 'bienvenida' },
-    despedida:    { icon: '\\uD83D\\uDC4B', label: 'Despedida',           cls: 'despedida'  }
+    bienvenida:{label:'Bienvenida', cls:'bienvenida'},
+    confirmacion:{label:'Confirmación', cls:'bienvenida'},
+    despedida:{label:'Despedida', cls:'despedida'}
   };
 
-  var html = '<div class="msg-panel">'
+  let html = '<div class="msg-panel">'
     + '<div class="msg-panel-header" onclick="toggleMensajes()">'
     + '<h3>&#9993;&#65039; Mensajes para Airbnb <span style="font-size:.78rem;opacity:.8;font-weight:400">(' + msgs.length + ' pendientes)</span></h3>'
-    + '<span class="msg-toggle-icon" id="msg-toggle-icon">&#9660;</span>'
-    + '</div>'
+    + '<span class="msg-toggle-icon" id="msg-toggle-icon">&#9660;</span></div>'
     + '<div class="msg-panel-body" id="msg-panel-body">';
 
   msgs.forEach(function(msg, i) {
-    var c = cfg[msg.tipo] || cfg.bienvenida;
+    const c = cfg[msg.tipo] || cfg.bienvenida;
     html += '<div class="msg-item">'
-      + '<div class="msg-item-header">'
-      + '<div class="msg-item-title">' + msg.huesped
-      + ' <span style="color:var(--gris-4);font-size:.8rem">&#183; ' + msg.apto + '</span></div>'
-      + '<span class="msg-tipo ' + c.cls + '">' + c.label + '</span>'
-      + '</div>'
-      + '<div style="font-size:.75rem;color:var(--gris-4);margin-bottom:8px">' + msg.sub + '</div>'
-      + '<div class="msg-texto" id="msg-texto-' + i + '">' + msg.texto + '</div>'
-      + '<button class="btn-copiar" id="btn-copiar-' + i + '" onclick="copiarMensaje(' + i + ')">'
-      + '&#128203; Copiar mensaje</button>'
-      + '</div>';
+      + '<div class="msg-item-header"><div class="msg-item-title">' + escapeHtmlClient(msg.huesped)
+      + ' <span style="color:var(--gris-4);font-size:.8rem">· ' + escapeHtmlClient(msg.apto) + '</span></div>'
+      + '<span class="msg-tipo ' + c.cls + '">' + c.label + '</span></div>'
+      + '<div style="font-size:.75rem;color:var(--gris-4);margin-bottom:8px">' + escapeHtmlClient(msg.sub) + '</div>'
+      + '<div class="msg-texto" id="msg-texto-' + i + '">' + formatMensajeHtml(msg) + '</div>'
+      + '<div class="msg-actions"><button class="btn-copiar" id="btn-copiar-' + i + '" onclick="copiarMensaje(' + i + ')">&#128203; Copiar y marcar enviado</button>'
+      + (msg.url ? '<a class="btn-abrir-checkin" href="' + escapeHtmlClient(msg.url) + '" target="_blank" rel="noopener">&#128279; Abrir check-in</a>' : '')
+      + '</div></div>';
   });
 
   html += '</div></div>';
   block.innerHTML = html;
-  // Cerrado por defecto
 }
 
 function toggleMensajes(forceOpen) {
@@ -1846,26 +1963,32 @@ function toggleMensajes(forceOpen) {
   }
 }
 
-function copiarMensaje(i) {
-  const el = document.getElementById('msg-texto-' + i);
-  const btn = document.getElementById('btn-copiar-' + i);
-  if (!el || !btn) return;
-  navigator.clipboard.writeText(el.textContent).then(() => {
-    btn.textContent = '\u2713 Copiado';
-    btn.classList.add('copiado');
-    setTimeout(() => { btn.innerHTML = '\ud83d\udccb Copiar mensaje'; btn.classList.remove('copiado'); }, 2000);
-  }).catch(() => {
-    // Fallback para Safari
-    const range = document.createRange();
-    range.selectNode(el);
-    window.getSelection().removeAllRanges();
-    window.getSelection().addRange(range);
-    document.execCommand('copy');
-    window.getSelection().removeAllRanges();
-    btn.textContent = '\u2713 Copiado';
-    btn.classList.add('copiado');
-    setTimeout(() => { btn.innerHTML = '\ud83d\udccb Copiar mensaje'; btn.classList.remove('copiado'); }, 2000);
+function copiarTextoPortapapeles(texto) {
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(texto);
+  return new Promise(function(resolve, reject) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = texto; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); resolve();
+    } catch (e) { reject(e); }
   });
+}
+
+async function copiarMensaje(i) {
+  const msg = (window._todayMsgs || [])[i];
+  const btn = document.getElementById('btn-copiar-' + i);
+  if (!msg || !btn) return;
+  btn.disabled = true;
+  try {
+    await copiarTextoPortapapeles(msg.texto);
+    await guardarMensajeEnviado(msg.rid, msg.tipo, msg.huesped);
+    showToast('✓ Mensaje copiado y sincronizado', 'success');
+    renderMensajesAirbnb();
+    if (document.getElementById('view-gestion')?.classList.contains('active')) renderGestion();
+  } catch (e) {
+    btn.disabled = false;
+    showToast('Mensaje copiado, pero no se pudo sincronizar: ' + e.message, 'error');
+  }
 }
 
 // ===============================================
@@ -2017,14 +2140,7 @@ function copiarEnlaceReserva(i, btn) {
   const rid = ids[i];
   const r = reservas.find(function(x){ return x.id === rid; });
   if (!r) return;
-  const apto = APTOS[r.aptoIdx] || APTOS[0];
-  const url = 'https://pepellorca.github.io/benidorm-apartaments/checkin.html'
-    + '?r=' + encodeURIComponent(r.id)
-    + '&h=' + encodeURIComponent(r.huesped || '')
-    + '&a=' + encodeURIComponent(apto.alias || '')
-    + '&e=' + encodeURIComponent(fmtDate(r.entrada))
-    + '&s=' + encodeURIComponent(fmtDate(r.salida))
-    + '&n=' + encodeURIComponent(r.noches || '');
+  const url = buildCheckinUrl(r);
 
   navigator.clipboard.writeText(url).then(function() {
     btn.textContent = '\u2713 Copiado';
@@ -2215,7 +2331,7 @@ function generarPDF(idx) {
   });
 
   html += '<div class="footer">';
-  html += 'Titular responsable: Pepe Llorca &bull; ';
+  html += 'Titular responsable: Vicenta María Beltran SL &bull; ';
   html += 'Datos tratados conforme al RD 933/2021 y RGPD &bull; ';
   html += 'Conservaci\u00f3n: 3 a\u00f1os &bull; ';
   html += 'Comunicado a SES.HOSPEDAJES en plazo legal &bull; ';
@@ -2239,40 +2355,25 @@ function field(label, value) {
 function getMsgEnviado(rid, tipo) {
   try { return (JSON.parse(localStorage.getItem('bnd_msgs')||'{}'))[rid+'_'+tipo]||null; } catch(e){return null;}
 }
-function setMsgEnviado(rid, tipo) {
-  try {
-    var fecha = new Date().toLocaleDateString('es-ES');
-    var d = JSON.parse(localStorage.getItem('bnd_msgs') || '{}');
-    d[rid + '_' + tipo] = fecha;
-    localStorage.setItem('bnd_msgs', JSON.stringify(d));
-    // Guardar también en Google Sheets via Apps Script
-    var huesped = '';
-    if (window._gLista) {
-      var r = window._gLista.find(function(x){ return x.id === rid; });
-      if (r) huesped = r.huesped || '';
-    }
-    var cb = 'env_' + Date.now();
-    var payload = JSON.stringify({
-      action: 'guardarEnviado',
-      key: 'MSG|' + rid + '|' + tipo,
-      fecha: fecha,
-      huesped: huesped,
-      tipo: tipo
-    });
-    window[cb] = function(r) { delete window[cb]; var s = document.getElementById('j_' + cb); if (s) s.remove(); };
-    var s = document.createElement('script');
-    s.id = 'j_' + cb;
-    s.onerror = function() { delete window[cb]; s.remove(); };
-    s.src = APPS_SCRIPT_URL + '?action=guardarEnviado&callback=' + cb + '&data=' + encodeURIComponent(payload);
-    document.head.appendChild(s);
-  } catch(e) { console.log('Error setMsgEnviado:', e.message); }
+async function guardarMensajeEnviado(rid, tipo, huesped) {
+  const fecha = new Date().toISOString();
+  const payload = {action:'guardarEnviado', key:'MSG|' + rid + '|' + tipo, fecha:fecha, huesped:huesped || '', tipo:tipo};
+  const url = APPS_SCRIPT_URL + '?action=guardarEnviado&data=' + encodeURIComponent(JSON.stringify(payload));
+  const resp = await jsonpRequest(url, 15000);
+  if (!resp || !resp.ok) throw new Error(resp?.error || 'Google Sheets no confirmó el guardado');
+
+  const data = JSON.parse(localStorage.getItem('bnd_msgs') || '{}');
+  data[rid + '_' + tipo] = resp.fecha || fecha;
+  localStorage.setItem('bnd_msgs', JSON.stringify(data));
+  window._msgsCache = data;
+  return resp;
 }
 function getCIReserva(rid) {
   try { return (JSON.parse(localStorage.getItem('bnd_checkins')||'[]')).find(function(c){return c.reservaId===rid;})||null; } catch(e){return null;}
 }
 function buildCheckinUrl(r) {
   var apto=APTOS[r.aptoIdx]||APTOS[0];
-  return 'https://pepellorca.github.io/benidorm-apartaments/checkin.html'
+  return PUBLIC_CHECKIN_BASE_URL
     +'?r='+encodeURIComponent(r.id)
     +'&h='+encodeURIComponent(r.huesped||'')
     +'&a='+encodeURIComponent(apto.alias||'')
@@ -2300,7 +2401,7 @@ function buildMsg(r, tipo) {
     +'\uD83D\uDCC5 Entrada: '+fmtDate(r.entrada)+' \u2192 '+fmtDate(r.salida)+' \u00B7 '+r.noches+' noches'+nl
     +'\u23F0 Check-in a partir de las '+ci_h+nl
     +'\u23F0 Check-out antes de las '+co_h+nl+nl
-    +'Para agilizar el check-in, pod\u00E9is rellenar vuestros datos con antelaci\u00F3n:'+nl
+    +'Para agilizar el check-in, pulsad este enlace y rellenad vuestros datos con antelaci\u00F3n:'+nl
     +url+nl+nl
     +'Cumplimos con la normativa de protecci\u00F3n de datos (RD 933/2021 y RGPD).'+nl+nl
     +'Cualquier duda estamos a vuestra disposici\u00F3n.'+nl
@@ -2398,13 +2499,21 @@ function toggleGest(i){
   b.style.display=open?'none':'block';
   if(t) t.innerHTML=open?'&#9660;':'&#9650;';
 }
-function copyMsgG(e,i,tipo){
+async function copyMsgG(e,i,tipo){
   e.stopPropagation();
   var r=(window._gLista||[])[i]; if(!r) return;
   var txt=buildMsg(r,tipo);
-  var btn=e.target;
-  var done=function(){setMsgEnviado(r.id,tipo);btn.textContent='\u2713 Enviado';btn.classList.add('done');showToast('\u2713 Mensaje copiado','success');renderGestion();};
-  navigator.clipboard.writeText(txt).then(done).catch(function(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();done();});
+  var btn=e.target; btn.disabled=true;
+  try {
+    await copiarTextoPortapapeles(txt);
+    await guardarMensajeEnviado(r.id,tipo,r.huesped||'');
+    showToast('✓ Mensaje copiado y sincronizado','success');
+    renderGestion();
+    renderMensajesAirbnb();
+  } catch(err) {
+    btn.disabled=false;
+    showToast('Mensaje copiado, pero no se pudo sincronizar: '+err.message,'error');
+  }
 }
 function linkG(i,btn){
   var r=(window._gLista||[])[i]; if(!r) return;
