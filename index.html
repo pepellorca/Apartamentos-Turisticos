@@ -215,6 +215,67 @@
   .empty-state { text-align: center; padding: 24px 16px; color: var(--gris-4); font-size: .85rem; }
   .empty-state .emoji { font-size: 1.8rem; display: block; margin-bottom: 6px; }
 
+  /* PREPARACIÓN DE APARTAMENTOS */
+  .prep-section-title { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+  .prep-section-title h2 { font-family:var(--font-disp); font-size:1.05rem; color:var(--mar-deep); }
+  .prep-section-title span { font-size:.72rem; color:var(--gris-4); }
+  .prep-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-bottom:16px; }
+  .prep-card { background:#fff; border-radius:12px; box-shadow:var(--shadow); border:2px solid var(--gris-2); overflow:hidden; }
+  .prep-card.preparado { border-color:var(--verde); }
+  .prep-card.cambio, .prep-card.limpieza { border-color:#F97316; }
+  .prep-card.verificar { border-color:var(--sol); }
+  .prep-card.ocupado { border-color:var(--coral); }
+  .prep-card.pendiente, .prep-card.proxima { border-color:var(--mar); }
+  .prep-card.libre { border-color:var(--gris-3); }
+  .prep-head { padding:14px 15px 10px; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .prep-apto { font-family:var(--font-disp); font-size:1rem; color:var(--mar-deep); font-weight:700; }
+  .prep-status { flex-shrink:0; border-radius:20px; padding:4px 9px; font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+  .prep-status.preparado { background:#DCFCE7; color:#166534; }
+  .prep-status.cambio, .prep-status.limpieza { background:#FFEDD5; color:#9A3412; }
+  .prep-status.verificar { background:#FEF3C7; color:#92400E; }
+  .prep-status.ocupado { background:#FEE2E2; color:#991B1B; }
+  .prep-status.pendiente, .prep-status.proxima { background:#DBEAFE; color:#1E40AF; }
+  .prep-status.libre { background:#F1F5F9; color:#475569; }
+  .prep-summary { padding:0 15px 13px; display:grid; gap:8px; }
+  .prep-info { background:var(--gris-1); border-radius:8px; padding:9px 10px; font-size:.78rem; color:var(--gris-4); line-height:1.45; }
+  .prep-info strong { color:var(--gris-5); }
+  .prep-info.current { border-left:4px solid var(--coral); }
+  .prep-info.next { border-left:4px solid var(--mar); }
+  .prep-turnover { margin:0 15px 10px; background:#FFF7ED; border:1px solid #FDBA74; color:#9A3412; border-radius:8px; padding:8px 10px; font-size:.76rem; font-weight:700; }
+  .prep-progress-wrap { padding:0 15px 12px; }
+  .prep-progress-meta { display:flex; justify-content:space-between; gap:8px; font-size:.72rem; color:var(--gris-4); margin-bottom:5px; }
+  .prep-progress { height:7px; background:var(--gris-2); border-radius:999px; overflow:hidden; }
+  .prep-progress > span { display:block; height:100%; background:var(--mar); border-radius:999px; transition:width .25s ease; }
+  .prep-card.preparado .prep-progress > span { background:var(--verde); }
+  .prep-toggle { width:100%; border:0; border-top:1px solid var(--gris-2); background:#fff; color:var(--mar); font-weight:700; font-size:.78rem; padding:10px 14px; cursor:pointer; }
+  .prep-toggle:hover { background:var(--gris-1); }
+  .prep-detail { display:none; border-top:1px solid var(--gris-2); padding:5px 14px 13px; }
+  .prep-detail.open { display:block; }
+  .prep-check { display:flex; align-items:center; gap:9px; padding:10px 0; border-bottom:1px solid var(--gris-2); }
+  .prep-check:last-of-type { border-bottom:0; }
+  .prep-check-icon { width:25px; height:25px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:.78rem; font-weight:800; }
+  .prep-check.done .prep-check-icon { background:#DCFCE7; color:#166534; }
+  .prep-check.pending .prep-check-icon { background:#FEF3C7; color:#92400E; }
+  .prep-check.blocked .prep-check-icon { background:#F1F5F9; color:#64748B; }
+  .prep-check-body { flex:1; min-width:0; }
+  .prep-check-name { font-size:.82rem; font-weight:700; color:var(--gris-5); }
+  .prep-check-note { font-size:.7rem; color:var(--gris-4); margin-top:2px; line-height:1.35; }
+  .prep-check-action { border:0; border-radius:7px; padding:6px 8px; font-size:.68rem; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .prep-check-action.primary { background:var(--mar); color:#fff; }
+  .prep-check-action.clean { background:#166534; color:#fff; }
+  .prep-check-action.undo { background:#E2E8F0; color:#475569; }
+  .prep-check-action:disabled { opacity:.45; cursor:not-allowed; }
+  .prep-footer { display:flex; gap:7px; flex-wrap:wrap; padding-top:9px; }
+  .prep-footer button { border:1px solid var(--gris-3); background:#fff; color:var(--gris-5); border-radius:7px; padding:7px 10px; font-size:.72rem; font-weight:700; cursor:pointer; }
+  .prep-footer button:hover { border-color:var(--mar); color:var(--mar); }
+  @media(max-width:700px){
+    .prep-grid { grid-template-columns:1fr; }
+    .prep-section-title { align-items:flex-end; }
+    .prep-head { padding:13px 13px 9px; }
+    .prep-summary, .prep-progress-wrap { padding-left:13px; padding-right:13px; }
+    .prep-check { align-items:flex-start; }
+  }
+
   /* CHECK-IN */
   .checkin-selector select { border: 2px solid var(--gris-3); border-radius: 8px; padding: 9px 13px; font-size: .88rem; color: var(--gris-5); background: #fff; outline: none; transition: border-color .2s; width: 100%; }
   .checkin-selector select:focus { border-color: var(--mar); }
@@ -713,6 +774,7 @@ let mensajesBackendSyncEnCurso = false;
 let estadoBackendSyncEnCurso = false;
 let estadoReservas = {};
 let currentUser = {name:'Usuario', email:''};
+let preparacionExpandida = {};
 
 // ===============================================
 // CLOCK
@@ -1148,6 +1210,20 @@ function getEstadoReserva(rid) {
   return estadoReservas[String(rid || '')] || {};
 }
 
+function aplicarEstadoBackendLocal(rid, nuevoEstado) {
+  const key = String(rid || '');
+  const previo = estadoReservas[key] || {};
+  const ci = getCIReserva(key);
+  const merged = Object.assign({}, previo, nuevoEstado || {});
+  if (previo.checkinRecibido || ci) {
+    merged.checkinRecibido = true;
+    merged.checkinViajeros = Number(previo.checkinViajeros || (ci && ci.viajeros ? ci.viajeros.length : (ci ? 1 : 0))) || 0;
+    merged.checkinFecha = previo.checkinFecha || (ci && ci.fecha) || '';
+  }
+  estadoReservas[key] = merged;
+  return merged;
+}
+
 function horaLlegadaReserva(rid) {
   const estado = getEstadoReserva(rid);
   if (estado.horaLlegada) return estado.horaLlegada;
@@ -1177,7 +1253,7 @@ async function guardarHoraLlegadaBackend(r, hora, origen) {
   };
   const resp = await jsonpRequest(APPS_SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload)), 20000);
   if (!resp || !resp.ok) throw new Error(resp?.error || 'No se pudo guardar la hora');
-  if (resp.estado) estadoReservas[r.id] = resp.estado;
+  if (resp.estado) aplicarEstadoBackendLocal(r.id, resp.estado);
   localStorage.setItem('bnd_estado_reservas', JSON.stringify(estadoReservas));
   return resp;
 }
@@ -1213,7 +1289,7 @@ async function cambiarEstadoLimpieza(rid, estado, button) {
   try {
     const resp = await jsonpRequest(APPS_SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload)), 20000);
     if (!resp || !resp.ok) throw new Error(resp?.error || 'No se pudo guardar el estado');
-    if (resp.estado) estadoReservas[r.id] = resp.estado;
+    if (resp.estado) aplicarEstadoBackendLocal(r.id, resp.estado);
     localStorage.setItem('bnd_estado_reservas', JSON.stringify(estadoReservas));
     showToast(estado === 'limpio' ? '✓ Piso marcado como limpio' : 'Limpieza reabierta', 'success');
     renderHoy();
@@ -1221,6 +1297,31 @@ async function cambiarEstadoLimpieza(rid, estado, button) {
   } catch(e) {
     if (button) button.disabled = false;
     showToast('No se pudo actualizar la limpieza: ' + e.message, 'error');
+  }
+}
+
+
+async function cambiarEstadoVerificacion(rid, estado, button) {
+  const r = reservas.find(function(x){ return x.id === rid; });
+  if (!r) return;
+  if (button) button.disabled = true;
+  const apto = APTOS[r.aptoIdx] || APTOS[0];
+  const payload = {
+    action:'setVerificacionEstado', reservaId:r.id, huesped:r.huesped || '', apartamento:apto.alias || '',
+    entrada:fmtDate(r.entrada), salida:fmtDate(r.salida), estado:estado,
+    actor:actorActual(), origen:'Aplicación'
+  };
+  try {
+    const resp = await jsonpRequest(APPS_SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload)), 20000);
+    if (!resp || !resp.ok) throw new Error(resp?.error || 'No se pudo guardar la verificación');
+    if (resp.estado) aplicarEstadoBackendLocal(r.id, resp.estado);
+    localStorage.setItem('bnd_estado_reservas', JSON.stringify(estadoReservas));
+    showToast(estado === 'verificado' ? '✓ Piso marcado como verificado' : 'Verificación reabierta', 'success');
+    renderHoy();
+    if (document.getElementById('view-gestion')?.classList.contains('active')) renderGestion();
+  } catch(e) {
+    if (button) button.disabled = false;
+    showToast('No se pudo actualizar la verificación: ' + e.message, 'error');
   }
 }
 
@@ -1361,46 +1462,177 @@ function renderStatsCard() {
 // ===============================================
 // VISTA HOY
 // ===============================================
+function inicioDia(value) {
+  const d = value ? new Date(value) : new Date();
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function diferenciaDias(desde, hasta) {
+  return Math.round((inicioDia(hasta) - inicioDia(desde)) / 86400000);
+}
+
+function etiquetaFechaLlegada(fecha, hoy) {
+  const dias = diferenciaDias(hoy, fecha);
+  if (dias === 0) return 'Llega hoy';
+  if (dias === 1) return 'Llega mañana';
+  return 'Llega el ' + fmtDate(fecha);
+}
+
+function togglePreparacion(aptoIdx) {
+  preparacionExpandida[aptoIdx] = !preparacionExpandida[aptoIdx];
+  renderEstadoAptos();
+}
+
+function checkPreparacionHtml_(opts) {
+  const clase = opts.done ? 'done' : (opts.blocked ? 'blocked' : 'pending');
+  const icono = opts.done ? '&#10003;' : (opts.blocked ? '&#8212;' : '&#9675;');
+  const accion = opts.action
+    ? '<button class="prep-check-action ' + (opts.actionClass || 'primary') + '" onclick="event.stopPropagation();' + opts.action + '">' + opts.actionLabel + '</button>'
+    : '';
+  return '<div class="prep-check ' + clase + '">'
+    + '<div class="prep-check-icon">' + icono + '</div>'
+    + '<div class="prep-check-body"><div class="prep-check-name">' + opts.name + '</div>'
+    + '<div class="prep-check-note">' + opts.note + '</div></div>'
+    + accion + '</div>';
+}
+
 function renderEstadoAptos() {
-  var hoy = new Date(); hoy.setHours(0,0,0,0);
-  var man = new Date(hoy); man.setDate(man.getDate()+1);
-  var kHoy = dateKey(hoy), kMan = dateKey(man);
-  var html = '<div class="estado-grid">';
+  const hoy = inicioDia();
+  const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
+  const kHoy = dateKey(hoy);
+  let html = '<div class="prep-section-title"><h2>&#127968; Preparación de apartamentos</h2><span>Estado compartido y sincronizado</span></div><div class="prep-grid">';
+
   APTOS.forEach(function(apto) {
-    var activa   = reservas.find(function(r){ return r.aptoIdx===apto.idx && r.entrada<=hoy && r.salida>hoy; });
-    var saleHoy  = reservas.find(function(r){ return r.aptoIdx===apto.idx && dateKey(r.salida)===kHoy; });
-    var llegaHoy = reservas.find(function(r){ return r.aptoIdx===apto.idx && dateKey(r.entrada)===kHoy; });
-    var llegaMan = reservas.find(function(r){ return r.aptoIdx===apto.idx && dateKey(r.entrada)===kMan; });
-    var colorClass = apto.idx===0 ? 'apto-tag-0' : 'apto-tag-1';
-    var estado, badge, detalle;
-    if (llegaHoy) {
-      estado='checkin'; badge='Check-in hoy';
-      detalle='<span class="estado-huesped">'+llegaHoy.huesped+'</span><br>Entrada hoy &bull; '+llegaHoy.noches+' noches hasta el '+fmtDate(llegaHoy.salida);
-    } else if (saleHoy) {
-      estado='limpieza'; badge='Sale hoy &bull; Limpiar';
-      detalle='<span class="estado-huesped">'+saleHoy.huesped+'</span> sale hoy antes de las 11:00'+(llegaMan ? '<br>&#9888; '+llegaMan.huesped+' entra ma&ntilde;ana' : '');
-    } else if (activa) {
-      var dias = Math.round((activa.salida-hoy)/86400000);
-      estado='ocupado'; badge='Ocupado';
-      detalle='<span class="estado-huesped">'+activa.huesped+'</span><br>Sale el '+fmtDate(activa.salida)+' &bull; '+dias+' d&iacute;a'+(dias!==1?'s':'')+' restante'+(dias!==1?'s':'');
-    } else if (llegaMan) {
-      estado='limpieza'; badge='Pendiente limpieza';
-      detalle='<span class="estado-huesped">'+llegaMan.huesped+'</span> entra ma&ntilde;ana<br>Preparar el apartamento hoy';
-    } else {
-      estado='libre'; badge='Libre';
-      var prox = reservas.filter(function(r){ return r.aptoIdx===apto.idx && r.entrada>hoy; }).sort(function(a,b){ return a.entrada-b.entrada; })[0];
-      detalle = prox ? 'Pr&oacute;xima entrada el '+fmtDate(prox.entrada)+' &bull; '+prox.huesped : 'Sin reservas pr&oacute;ximas';
+    const listaApto = reservas.filter(function(r){ return r.aptoIdx === apto.idx; }).sort(function(a,b){ return a.entrada - b.entrada; });
+    const actual = listaApto.filter(function(r){ return r.entrada < hoy && r.salida >= hoy; }).sort(function(a,b){ return b.entrada - a.entrada; })[0] || null;
+    const proxima = listaApto.filter(function(r){ return r.entrada >= hoy; })[0] || null;
+    const salidaHoy = actual && dateKey(actual.salida) === kHoy;
+    const cambioHoy = !!(actual && proxima && dateKey(actual.salida) === kHoy && dateKey(proxima.entrada) === kHoy);
+
+    if (!proxima) {
+      const estadoSalida = actual ? getEstadoReserva(actual.id) : {};
+      const salidaCompletada = !!(actual && salidaHoy && estadoSalida.limpiezaEstado === 'limpio');
+      const ocupadoReal = !!actual && !salidaCompletada;
+      const status = ocupadoReal ? 'ocupado' : 'libre';
+      const label = ocupadoReal ? 'Ocupado' : 'Libre';
+      const detalle = ocupadoReal
+        ? '<div class="prep-info current"><strong>Ocupado actualmente</strong><br>' + escapeHtmlClient(actual.huesped) + ' · sale ' + (salidaHoy ? 'hoy antes de las 11:00' : 'el ' + fmtDate(actual.salida)) + '</div>'
+        : (salidaCompletada
+          ? '<div class="prep-info"><strong>Salida completada</strong><br>' + escapeHtmlClient(actual.huesped) + ' · piso marcado como limpio.</div>'
+          : '<div class="prep-info"><strong>Actualmente libre</strong><br>Sin próximas reservas cargadas.</div>');
+      html += '<div class="prep-card ' + status + '"><div class="prep-head">'
+        + '<div class="prep-apto">' + escapeHtmlClient(apto.alias) + '</div>'
+        + '<span class="prep-status ' + status + '">' + label + '</span></div>'
+        + '<div class="prep-summary">' + detalle + '</div></div>';
+      return;
     }
-    // Emojis como entidades HTML
-    var iconos = { checkin:'&#128309;', ocupado:'&#128308;', limpieza:'&#128993;', libre:'&#128994;' };
-    html += '<div class="estado-card '+estado+'">'
-      +'<div class="estado-apto-nombre">&#127968; <span class="'+colorClass+'">'+apto.alias+'</span></div>'
-      +'<div class="estado-badge '+estado+'">'+iconos[estado]+' '+badge+'</div>'
-      +'<div class="estado-detalle">'+detalle+'</div>'
-      +'</div>';
+
+    const estadoProxima = getEstadoReserva(proxima.id);
+    const fuenteLimpieza = reservaLimpiezaParaLlegada(proxima);
+    const reservaLimpieza = fuenteLimpieza || proxima;
+    const estadoLimpieza = getEstadoReserva(reservaLimpieza.id);
+    const limpio = estadoLimpieza.limpiezaEstado === 'limpio';
+    const verificadoGuardado = estadoProxima.verificacionEstado === 'verificado';
+    const verificado = limpio && verificadoGuardado;
+    const ciLocal = getCIReserva(proxima.id);
+    const checkinRecibido = !!estadoProxima.checkinRecibido || !!ciLocal;
+    const viajeros = Number(estadoProxima.checkinViajeros || (ciLocal && ciLocal.viajeros ? ciLocal.viajeros.length : (ciLocal ? 1 : 0))) || 0;
+    const hora = horaLlegadaReserva(proxima.id);
+    const horaConocida = !!hora;
+    const completadas = [limpio, verificado, checkinRecibido, horaConocida].filter(Boolean).length;
+    const porcentaje = Math.round(completadas * 25);
+    const diasLlegada = diferenciaDias(hoy, proxima.entrada);
+    const puedeLimpiar = !fuenteLimpieza || fuenteLimpieza.salida <= hoy;
+    const urgente = diasLlegada <= 1;
+    if (preparacionExpandida[apto.idx] === undefined) preparacionExpandida[apto.idx] = urgente || cambioHoy;
+    const abierta = !!preparacionExpandida[apto.idx];
+
+    const actualSigueOcupado = !!actual && !(salidaHoy && limpio);
+    let status = 'proxima', label = 'Próxima reserva';
+    if (completadas === 4) { status = 'preparado'; label = 'Preparado'; }
+    else if (cambioHoy && !limpio) { status = 'cambio'; label = 'Cambio hoy'; }
+    else if (diasLlegada <= 1 && limpio && !verificado) { status = 'verificar'; label = 'Falta verificar'; }
+    else if (actualSigueOcupado) { status = 'ocupado'; label = 'Ocupado'; }
+    else if (diasLlegada <= 1 && !limpio && puedeLimpiar) { status = 'limpieza'; label = 'En limpieza'; }
+    else if (diasLlegada <= 1) { status = 'pendiente'; label = 'Pendiente'; }
+
+    let actualHtml = '';
+    if (actualSigueOcupado) {
+      actualHtml = '<div class="prep-info current"><strong>Ocupado actualmente</strong><br>'
+        + escapeHtmlClient(actual.huesped) + ' · sale ' + (salidaHoy ? 'hoy antes de las 11:00' : 'el ' + fmtDate(actual.salida)) + '</div>';
+    } else if (actual && salidaHoy && limpio) {
+      actualHtml = '<div class="prep-info"><strong>Salida completada</strong><br>'
+        + escapeHtmlClient(actual.huesped) + ' · limpieza terminada.</div>';
+    } else {
+      actualHtml = '<div class="prep-info"><strong>Actualmente libre</strong><br>Disponible hasta la próxima llegada.</div>';
+    }
+
+    const nextHtml = '<div class="prep-info next"><strong>Próxima llegada</strong><br>'
+      + escapeHtmlClient(proxima.huesped) + ' · ' + etiquetaFechaLlegada(proxima.entrada, hoy)
+      + (hora ? ' a las ' + escapeHtmlClient(hora) : ' · hora pendiente') + '</div>';
+
+    let turnoverHtml = '';
+    if (cambioHoy) {
+      turnoverHtml = '<div class="prep-turnover">&#9888; Cambio de huésped hoy · salida 11:00 → llegada ' + (hora || 'pendiente') + '</div>';
+    }
+
+    let notaLimpieza = 'Pendiente de completar';
+    let accionLimpieza = '', accionLimpiezaLabel = '', accionLimpiezaClass = 'clean';
+    if (limpio) {
+      notaLimpieza = 'Terminada' + (estadoLimpieza.limpiezaPor ? ' por ' + escapeHtmlClient(estadoLimpieza.limpiezaPor) : '')
+        + (estadoLimpieza.limpiezaFecha ? ' · ' + fechaHoraCorta(estadoLimpieza.limpiezaFecha) : '');
+      accionLimpieza = "cambiarEstadoLimpieza('" + reservaLimpieza.id + "','pendiente',this)";
+      accionLimpiezaLabel = 'Desmarcar'; accionLimpiezaClass = 'undo';
+    } else if (puedeLimpiar) {
+      notaLimpieza = fuenteLimpieza ? 'Pendiente desde la salida de ' + escapeHtmlClient(fuenteLimpieza.huesped) : 'Pendiente';
+      accionLimpieza = "cambiarEstadoLimpieza('" + reservaLimpieza.id + "','limpio',this)";
+      accionLimpiezaLabel = 'Marcar limpio';
+    } else {
+      notaLimpieza = 'Pendiente de la salida de ' + escapeHtmlClient(fuenteLimpieza.huesped) + ' · ' + fmtDate(fuenteLimpieza.salida);
+    }
+
+    let notaVerificacion = 'Pendiente de la limpieza';
+    let accionVerificacion = '', accionVerificacionLabel = '', accionVerificacionClass = 'primary';
+    if (verificado) {
+      notaVerificacion = 'Verificado' + (estadoProxima.verificacionPor ? ' por ' + escapeHtmlClient(estadoProxima.verificacionPor) : '')
+        + (estadoProxima.verificacionFecha ? ' · ' + fechaHoraCorta(estadoProxima.verificacionFecha) : '');
+      accionVerificacion = "cambiarEstadoVerificacion('" + proxima.id + "','pendiente',this)";
+      accionVerificacionLabel = 'Desmarcar'; accionVerificacionClass = 'undo';
+    } else if (limpio) {
+      notaVerificacion = verificadoGuardado ? 'Debe verificarse de nuevo' : 'Pendiente de comprobación final';
+      accionVerificacion = "cambiarEstadoVerificacion('" + proxima.id + "','verificado',this)";
+      accionVerificacionLabel = 'Marcar verificado';
+    }
+
+    const checks = checkPreparacionHtml_({
+      done:limpio, blocked:!limpio && !puedeLimpiar, name:'Limpieza terminada', note:notaLimpieza,
+      action:accionLimpieza, actionLabel:accionLimpiezaLabel, actionClass:accionLimpiezaClass
+    }) + checkPreparacionHtml_({
+      done:verificado, blocked:!limpio, name:'Verificación final', note:notaVerificacion,
+      action:accionVerificacion, actionLabel:accionVerificacionLabel, actionClass:accionVerificacionClass
+    }) + checkPreparacionHtml_({
+      done:checkinRecibido, blocked:false, name:'Check-in recibido',
+      note:checkinRecibido ? (viajeros ? viajeros + ' viajero' + (viajeros !== 1 ? 's' : '') + ' registrado' + (viajeros !== 1 ? 's' : '') : 'Registro recibido') : 'Pendiente del huésped'
+    }) + checkPreparacionHtml_({
+      done:horaConocida, blocked:false, name:'Hora de llegada', note:horaConocida ? 'Llegada prevista a las ' + escapeHtmlClient(hora) : 'Hora todavía pendiente',
+      action:"cambiarHoraLlegada('" + proxima.id + "')", actionLabel:'Cambiar hora', actionClass:'primary'
+    });
+
+    html += '<div class="prep-card ' + status + '">'
+      + '<div class="prep-head"><div class="prep-apto">' + escapeHtmlClient(apto.alias) + '</div><span class="prep-status ' + status + '">' + label + '</span></div>'
+      + '<div class="prep-summary">' + actualHtml + nextHtml + '</div>'
+      + turnoverHtml
+      + '<div class="prep-progress-wrap"><div class="prep-progress-meta"><span>Preparación</span><strong>' + completadas + ' de 4</strong></div>'
+      + '<div class="prep-progress"><span style="width:' + porcentaje + '%"></span></div></div>'
+      + '<button class="prep-toggle" onclick="togglePreparacion(' + apto.idx + ')">' + (abierta ? 'Ocultar preparación &#9650;' : 'Ver preparación &#9660;') + '</button>'
+      + '<div class="prep-detail ' + (abierta ? 'open' : '') + '">' + checks
+      + '<div class="prep-footer"><button onclick="openModal(\'' + proxima.id + '\')">Ver reserva</button></div></div>'
+      + '</div>';
   });
+
   html += '</div>';
-  var el = document.getElementById('estado-aptos-block');
+  const el = document.getElementById('estado-aptos-block');
   if (el) el.innerHTML = html;
 }
 
@@ -1519,13 +1751,20 @@ function renderLimpiezas(items) {
       }
     } else {
       const source = reservaLimpiezaParaLlegada(r);
-      const st = source ? getEstadoReserva(source.id) : {};
-      if (st.limpiezaEstado === 'limpio') {
-        clase='limpieza-limpio'; badge='limpio'; icon='&#9989;'; titulo='Limpieza terminada';
-        detalle=r.huesped + ' entra hoy' + (st.limpiezaPor ? ' &bull; limpio por ' + st.limpiezaPor : '');
+      const cleaningReservation = source || r;
+      const st = getEstadoReserva(cleaningReservation.id);
+      const llegadaSt = getEstadoReserva(r.id);
+      if (st.limpiezaEstado === 'limpio' && llegadaSt.verificacionEstado === 'verificado') {
+        clase='limpieza-limpio'; badge='limpio'; icon='&#9989;'; titulo='Piso verificado';
+        detalle=r.huesped + ' entra hoy' + (llegadaSt.verificacionPor ? ' &bull; verificado por ' + llegadaSt.verificacionPor : '');
+        actionHtml='<button class="btn-operativo undo" onclick="event.stopPropagation();cambiarEstadoVerificacion(\''+r.id+'\',\'pendiente\',this)">Desmarcar</button>';
+      } else if (st.limpiezaEstado === 'limpio') {
+        clase='limpieza-verificar'; badge='verificar'; icon='&#128269;'; titulo='Verificar limpieza piso';
+        detalle=r.huesped + ' entra hoy &bull; limpieza terminada';
+        actionHtml='<button class="btn-operativo hour" onclick="event.stopPropagation();cambiarEstadoVerificacion(\''+r.id+'\',\'verificado\',this)">&#10003; Marcar verificado</button>';
       } else {
         clase='limpieza-verificar'; badge='verificar'; icon='&#128269;'; titulo='Verificar limpieza piso';
-        detalle=r.huesped + ' entra hoy &bull; revisar antes del check-in';
+        detalle=r.huesped + ' entra hoy &bull; pendiente de limpieza';
       }
     }
 
