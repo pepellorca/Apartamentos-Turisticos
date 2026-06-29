@@ -42,6 +42,15 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 40px; }
 .reserva-item label { color: var(--gris-4); font-size: .72rem; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px; }
 .reserva-item span { font-weight: 600; color: var(--gris-5); }
 
+/* Hora de llegada */
+.arrival-time-box { background:#F0FFF4; border:2px solid #86EFAC; border-radius:var(--r); padding:16px 18px; margin-bottom:16px; }
+.arrival-time-box h3 { font-size:.92rem; color:#166534; margin-bottom:6px; }
+.arrival-time-box p { font-size:.78rem; color:var(--gris-4); line-height:1.5; margin-bottom:10px; }
+.arrival-time-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.arrival-time-row input { border:2px solid #86EFAC; border-radius:9px; padding:10px 13px; font-size:1.05rem; font-weight:700; color:#166534; background:#fff; outline:none; min-width:135px; }
+.arrival-time-row input:focus { border-color:#16A34A; }
+.arrival-time-required { font-size:.75rem; color:#166534; font-weight:600; }
+
 /* RGPD */
 .rgpd-box { background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; font-size: .8rem; color: #78350F; line-height: 1.6; }
 .rgpd-box h3 { font-size: .85rem; margin-bottom: 8px; color: #92400E; }
@@ -179,6 +188,15 @@ canvas.firma-canvas { display: block; width: 100%; height: 120px; cursor: crossh
       </div>
     </div>
 
+    <div class="arrival-time-box">
+      <h3 data-t="arrival_title">&#128336; Hora aproximada de llegada</h3>
+      <p data-t="arrival_desc">Indica a qu&eacute; hora calculas llegar. La recibir&aacute; la persona que realiza la entrega de llaves.</p>
+      <div class="arrival-time-row">
+        <input type="time" id="hora-llegada" required onchange="updateProgress()" oninput="updateProgress()">
+        <span class="arrival-time-required" data-t="arrival_required">Campo obligatorio</span>
+      </div>
+    </div>
+
     <div class="rgpd-box">
       <h3 data-t="rgpd_title">&#128274; Protección de datos · RD 933/2021</h3>
       <p data-t="rgpd_text">Los datos que facilitas son necesarios para el cumplimiento del Real Decreto 933/2021 sobre registro de viajeros. Responsable: Vicenta María Beltran SL. Finalidad: registro obligatorio de viajeros y comunicación al Ministerio del Interior (SES.HOSPEDAJES). Conservación: 3 años. Tienes derecho de acceso, rectificación y supresión conforme al RGPD.</p>
@@ -238,6 +256,9 @@ const T = {
     reserva_title: '&#128203; Tu reserva en Airbnb',
     label_apto: 'Apartamento', label_codigo: 'C\u00F3digo', label_entrada: 'Check-in',
     label_salida: 'Check-out', label_huesped: 'Titular', label_noches: 'Noches',
+    arrival_title: '&#128336; Hora aproximada de llegada',
+    arrival_desc: 'Indica a qu\u00E9 hora calculas llegar. La recibir\u00E1 la persona que realiza la entrega de llaves.',
+    arrival_required: 'Campo obligatorio',
     rgpd_title: '&#128274; Protecci\u00F3n de datos \u00B7 RD 933/2021',
     rgpd_text: 'Los datos que facilitas son necesarios para el cumplimiento del Real Decreto 933/2021 sobre registro de viajeros. Responsable: Vicenta María Beltran SL. Finalidad: registro obligatorio de viajeros y comunicaci\u00F3n al Ministerio del Interior (SES.HOSPEDAJES). Conservaci\u00F3n: 3 a\u00F1os. Tienes derecho de acceso, rectificaci\u00F3n y supresi\u00F3n conforme al RGPD.',
     rgpd_accept: 'He le\u00EDdo y acepto el tratamiento de mis datos personales conforme a la normativa vigente.',
@@ -265,6 +286,7 @@ const T = {
     btn_eliminar: 'Eliminar',
     enviando: 'Enviando...',
     error_rgpd: 'Debes aceptar la pol\u00EDtica de protecci\u00F3n de datos.',
+    error_arrival: 'Indica la hora aproximada de llegada.',
     error_campos: 'Revisa los campos obligatorios (marcados en rojo).',
     error_firma: 'El viajero {n} debe firmar el formulario.',
     error_envio: 'Error al enviar. Int\u00E9ntalo de nuevo.',
@@ -276,6 +298,9 @@ const T = {
     reserva_title: '&#128203; Your Airbnb reservation',
     label_apto: 'Apartment', label_codigo: 'Code', label_entrada: 'Check-in',
     label_salida: 'Check-out', label_huesped: 'Guest', label_noches: 'Nights',
+    arrival_title: '&#128336; Approximate arrival time',
+    arrival_desc: 'Tell us approximately what time you expect to arrive. The person handing over the keys will receive it.',
+    arrival_required: 'Required field',
     rgpd_title: '&#128274; Data Protection \u00B7 RD 933/2021',
     rgpd_text: 'The data you provide is required for compliance with Spanish Royal Decree 933/2021 on traveller registration. Data controller: Vicenta María Beltran SL. Purpose: mandatory traveller registration and communication to the Spanish Ministry of Interior (SES.HOSPEDAJES). Retention: 3 years. You have the right of access, rectification and erasure under GDPR.',
     rgpd_accept: 'I have read and accept the processing of my personal data in accordance with current regulations.',
@@ -303,6 +328,7 @@ const T = {
     btn_eliminar: 'Remove',
     enviando: 'Sending...',
     error_rgpd: 'You must accept the data protection policy.',
+    error_arrival: 'Please enter your approximate arrival time.',
     error_campos: 'Please check the required fields (highlighted in red).',
     error_firma: 'Traveller {n} must sign the form.',
     error_envio: 'Error sending. Please try again.',
@@ -314,6 +340,9 @@ const T = {
     reserva_title: '&#128203; Votre r\u00E9servation Airbnb',
     label_apto: 'Appartement', label_codigo: 'Code', label_entrada: 'Check-in',
     label_salida: 'Check-out', label_huesped: 'Titulaire', label_noches: 'Nuits',
+    arrival_title: '&#128336; Heure d\'arriv\u00E9e approximative',
+    arrival_desc: 'Indiquez l\'heure approximative de votre arriv\u00E9e. La personne charg\u00E9e de remettre les cl\u00E9s la recevra.',
+    arrival_required: 'Champ obligatoire',
     rgpd_title: '&#128274; Protection des donn\u00E9es \u00B7 RD 933/2021',
     rgpd_text: 'Les donn\u00E9es que vous fournissez sont n\u00E9cessaires pour se conformer au D\u00E9cret Royal espagnol 933/2021 sur l\'enregistrement des voyageurs. Responsable: Vicenta María Beltran SL. Finalit\u00E9: enregistrement obligatoire des voyageurs et communication au Minist\u00E8re de l\'Int\u00E9rieur espagnol (SES.HOSPEDAJES). Conservation: 3 ans. Vous disposez des droits d\'acc\u00E8s, rectification et effacement conform\u00E9ment au RGPD.',
     rgpd_accept: 'J\'ai lu et j\'accepte le traitement de mes donn\u00E9es personnelles conform\u00E9ment \u00E0 la r\u00E9glementation en vigueur.',
@@ -341,6 +370,7 @@ const T = {
     btn_eliminar: 'Supprimer',
     enviando: 'Envoi en cours...',
     error_rgpd: 'Vous devez accepter la politique de protection des donn\u00E9es.',
+    error_arrival: 'Veuillez indiquer votre heure d\'arriv\u00E9e approximative.',
     error_campos: 'Veuillez v\u00E9rifier les champs obligatoires (en rouge).',
     error_firma: 'Le voyageur {n} doit signer le formulaire.',
     error_envio: 'Erreur d\'envoi. Veuillez r\u00E9essayer.',
@@ -352,6 +382,9 @@ const T = {
     reserva_title: '&#128203; Ihre Airbnb-Buchung',
     label_apto: 'Wohnung', label_codigo: 'Code', label_entrada: 'Check-in',
     label_salida: 'Check-out', label_huesped: 'G\u00E4ste', label_noches: 'N\u00E4chte',
+    arrival_title: '&#128336; Ungef\u00E4hre Ankunftszeit',
+    arrival_desc: 'Geben Sie bitte Ihre ungef\u00E4hre Ankunftszeit an. Die Person, die die Schl\u00FCssel \u00FCbergibt, wird informiert.',
+    arrival_required: 'Pflichtfeld',
     rgpd_title: '&#128274; Datenschutz \u00B7 RD 933/2021',
     rgpd_text: 'Die von Ihnen gemachten Angaben sind f\u00FCr die Erf\u00FCllung der spanischen K\u00F6niglichen Verordnung 933/2021 \u00FCber die Registrierung von Reisenden erforderlich. Verantwortlicher: Vicenta María Beltran SL. Zweck: Pflichtregistrierung von Reisenden und \u00DCbermittlung an das spanische Innenministerium (SES.HOSPEDAJES). Aufbewahrung: 3 Jahre. Sie haben das Recht auf Zugang, Berichtigung und L\u00F6schung gem\u00E4\u00DF DSGVO.',
     rgpd_accept: 'Ich habe die Datenschutzerkl\u00E4rung gelesen und stimme der Verarbeitung meiner personenbezogenen Daten gem\u00E4\u00DF den geltenden Vorschriften zu.',
@@ -379,6 +412,7 @@ const T = {
     btn_eliminar: 'Entfernen',
     enviando: 'Wird gesendet...',
     error_rgpd: 'Sie m\u00FCssen die Datenschutzerkl\u00E4rung akzeptieren.',
+    error_arrival: 'Bitte geben Sie Ihre ungef\u00E4hre Ankunftszeit an.',
     error_campos: 'Bitte \u00FCberpr\u00FCfen Sie die Pflichtfelder (rot markiert).',
     error_firma: 'Reisender {n} muss das Formular unterzeichnen.',
     error_envio: 'Sendefehler. Bitte erneut versuchen.',
@@ -698,17 +732,17 @@ function clearFirma(n) {
 // ═══════════════════════════════════════════
 function updateProgress() {
   const rgpd = document.getElementById('rgpd-check')?.checked;
+  const horaLlegada = document.getElementById('hora-llegada')?.value || '';
   const totalViajeros = document.querySelectorAll('.viajero-card').length;
   let pct = 0;
+  if (horaLlegada) pct += 20;
   if (rgpd) pct += 20;
-  if (totalViajeros > 0) pct += 30;
-  // Contar firmas
+  if (totalViajeros > 0) pct += 20;
   let firmados = 0, total = 0;
   for (const k in firmas) { total++; if (firmas[k].signed) firmados++; }
-  if (total > 0) pct += Math.round(50 * firmados / total);
+  if (total > 0) pct += Math.round(40 * firmados / total);
   document.getElementById('progress-fill').style.width = pct + '%';
-  // Habilitar botón
-  document.getElementById('btn-submit').disabled = !rgpd || totalViajeros === 0;
+  document.getElementById('btn-submit').disabled = !rgpd || !horaLlegada || totalViajeros === 0;
 }
 
 // ═══════════════════════════════════════════
@@ -813,6 +847,8 @@ async function verificarRegistro(reservaId) {
 
 async function enviarFormulario() {
   if (!document.getElementById('rgpd-check').checked) { alert(t('error_rgpd')); return; }
+  const horaLlegada = document.getElementById('hora-llegada')?.value || '';
+  if (!horaLlegada) { alert(t('error_arrival')); document.getElementById('hora-llegada')?.focus(); return; }
 
   const viajeros = [];
   let hayError = false;
@@ -864,6 +900,8 @@ async function enviarFormulario() {
     apartamento: reservaData?.apto || '',
     entrada: reservaData?.entrada || '',
     salida: reservaData?.salida || '',
+    horaLlegada: horaLlegada,
+    actor: reservaData?.huesped || 'Huésped',
     idioma: lang,
     fechaRegistro: new Date().toISOString(),
     viajeros: viajeros

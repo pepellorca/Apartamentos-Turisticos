@@ -194,6 +194,17 @@
   .limpieza-estado.aviso { background:#FEF3C7; color:#92400E; }
   .limpieza-estado.curso { background:#FFEDD5; color:#9A3412; }
   .limpieza-estado.verificar { background:#DBEAFE; color:#1E40AF; }
+
+  .event-item.limpieza-limpio { border-color: var(--verde); background:#F0FFF4; }
+  .limpieza-estado.limpio { background:#DCFCE7; color:#166534; }
+  .event-actions { margin-left:auto; display:flex; align-items:center; gap:6px; flex-shrink:0; }
+  .btn-operativo { border:none; border-radius:7px; padding:7px 10px; font-size:.74rem; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .btn-operativo.clean { background:#166534; color:#fff; }
+  .btn-operativo.undo { background:#E2E8F0; color:#475569; }
+  .btn-operativo.hour { background:#DBEAFE; color:#1E40AF; }
+  .hora-chip { display:inline-flex; align-items:center; gap:4px; background:#E0F2FE; color:#075985; border-radius:20px; padding:3px 9px; font-size:.72rem; font-weight:700; margin-top:5px; }
+  .hora-chip.pending { background:#F1F5F9; color:#64748B; }
+  .operativo-meta { font-size:.72rem; color:var(--gris-4); margin-top:4px; }
   .event-icon { font-size: 1.3rem; line-height: 1; flex-shrink: 0; }
   .event-body { flex: 1; min-width: 0; }
   .event-name { font-weight: 700; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -398,6 +409,9 @@
     .cal-day { min-height: 55px; }
     .res-bar { font-size: .6rem; }
     .summary-strip { grid-template-columns: repeat(2,1fr); }
+    .event-item { flex-wrap:wrap; }
+    .event-actions { width:100%; justify-content:flex-end; }
+    .btn-operativo { padding:7px 12px; }
   }
 
   /* HEADER RESPONSIVE */
@@ -696,6 +710,9 @@ let modalReservaId = null;
 let maestroAptos = {}; // Datos fijos leídos desde la pestaña Maestro
 let maestroSyncTimer = null;
 let mensajesBackendSyncEnCurso = false;
+let estadoBackendSyncEnCurso = false;
+let estadoReservas = {};
+let currentUser = {name:'Usuario', email:''};
 
 // ===============================================
 // CLOCK
@@ -789,6 +806,7 @@ function signIn() {
 }
 
 function mostrarApp(user) {
+  currentUser = user || {name:'Usuario', email:''};
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('user-badge').style.display = 'flex';
@@ -901,6 +919,7 @@ async function syncDrive() {
       // El maestro sigue sincronizándose aunque falte un CSV.
       await cargarDesdeMaestro();
       await cargarMensajesDesdeBackend(true);
+      await cargarEstadoReservasBackend(true);
       return;
     }
 
@@ -933,6 +952,7 @@ async function syncDrive() {
     showToast(`\u2713 ${reservas.length} reservas cargadas desde Drive`, 'success');
     await cargarDesdeMaestro();
     await cargarMensajesDesdeBackend(true);
+    await cargarEstadoReservasBackend(true);
     renderHoy();
     renderStatsCard();
 
@@ -1096,13 +1116,127 @@ async function cargarMensajesDesdeBackend(silent) {
   }
 }
 
+function actorActual() {
+  return (currentUser && (currentUser.name || currentUser.email)) || 'Usuario';
+}
+
+async function cargarEstadoReservasBackend(silent) {
+  if (estadoBackendSyncEnCurso) return estadoReservas;
+  estadoBackendSyncEnCurso = true;
+  try {
+    const resp = await jsonpRequest(APPS_SCRIPT_URL + '?action=getEstadoReservas', 15000);
+    if (!resp || !resp.ok) throw new Error(resp?.error || 'No se pudo leer el estado operativo');
+    const map = {};
+    (resp.estados || []).forEach(function(item) {
+      if (item && item.reserva) map[String(item.reserva)] = item;
+    });
+    estadoReservas = map;
+    localStorage.setItem('bnd_estado_reservas', JSON.stringify(map));
+    renderHoy();
+    if (document.getElementById('view-gestion')?.classList.contains('active')) renderGestion();
+    return map;
+  } catch (e) {
+    try { estadoReservas = JSON.parse(localStorage.getItem('bnd_estado_reservas') || '{}'); } catch(_e) {}
+    if (!silent) showToast('No se pudo sincronizar el estado operativo: ' + e.message, 'error');
+    return estadoReservas;
+  } finally {
+    estadoBackendSyncEnCurso = false;
+  }
+}
+
+function getEstadoReserva(rid) {
+  return estadoReservas[String(rid || '')] || {};
+}
+
+function horaLlegadaReserva(rid) {
+  const estado = getEstadoReserva(rid);
+  if (estado.horaLlegada) return estado.horaLlegada;
+  const ci = getCIReserva(rid);
+  return ci?.horaLlegada || '';
+}
+
+function fechaHoraCorta(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (isNaN(d)) return String(value);
+  return d.toLocaleString('es-ES', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+}
+
+function reservaLimpiezaParaLlegada(arrival) {
+  return reservas
+    .filter(function(r){ return r.aptoIdx === arrival.aptoIdx && r.id !== arrival.id && r.salida <= arrival.entrada; })
+    .sort(function(a,b){ return b.salida - a.salida; })[0] || null;
+}
+
+async function guardarHoraLlegadaBackend(r, hora, origen) {
+  const apto = APTOS[r.aptoIdx] || APTOS[0];
+  const payload = {
+    action:'setHoraLlegada', reservaId:r.id, huesped:r.huesped || '', apartamento:apto.alias || '',
+    entrada:fmtDate(r.entrada), salida:fmtDate(r.salida), horaLlegada:hora,
+    actor:actorActual(), origen:origen || 'Aplicación'
+  };
+  const resp = await jsonpRequest(APPS_SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload)), 20000);
+  if (!resp || !resp.ok) throw new Error(resp?.error || 'No se pudo guardar la hora');
+  if (resp.estado) estadoReservas[r.id] = resp.estado;
+  localStorage.setItem('bnd_estado_reservas', JSON.stringify(estadoReservas));
+  return resp;
+}
+
+async function cambiarHoraLlegada(rid) {
+  const r = reservas.find(function(x){ return x.id === rid; });
+  if (!r) return;
+  const actual = horaLlegadaReserva(rid) || '14:00';
+  const hora = prompt('Hora aproximada de llegada (HH:MM)', actual);
+  if (hora === null) return;
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(hora)) {
+    showToast('Formato de hora no válido. Usa HH:MM', 'error');
+    return;
+  }
+  try {
+    await guardarHoraLlegadaBackend(r, hora, 'Aplicación');
+    showToast('✓ Hora de llegada guardada y sincronizada', 'success');
+    renderHoy();
+    if (document.getElementById('view-gestion')?.classList.contains('active')) renderGestion();
+  } catch(e) { showToast('No se pudo guardar la hora: ' + e.message, 'error'); }
+}
+
+async function cambiarEstadoLimpieza(rid, estado, button) {
+  const r = reservas.find(function(x){ return x.id === rid; });
+  if (!r) return;
+  if (button) button.disabled = true;
+  const apto = APTOS[r.aptoIdx] || APTOS[0];
+  const payload = {
+    action:'setLimpiezaEstado', reservaId:r.id, huesped:r.huesped || '', apartamento:apto.alias || '',
+    entrada:fmtDate(r.entrada), salida:fmtDate(r.salida), estado:estado,
+    actor:actorActual(), origen:'Aplicación'
+  };
+  try {
+    const resp = await jsonpRequest(APPS_SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload)), 20000);
+    if (!resp || !resp.ok) throw new Error(resp?.error || 'No se pudo guardar el estado');
+    if (resp.estado) estadoReservas[r.id] = resp.estado;
+    localStorage.setItem('bnd_estado_reservas', JSON.stringify(estadoReservas));
+    showToast(estado === 'limpio' ? '✓ Piso marcado como limpio' : 'Limpieza reabierta', 'success');
+    renderHoy();
+    if (document.getElementById('view-gestion')?.classList.contains('active')) renderGestion();
+  } catch(e) {
+    if (button) button.disabled = false;
+    showToast('No se pudo actualizar la limpieza: ' + e.message, 'error');
+  }
+}
+
 function iniciarSincronizacionMensajes() {
   if (maestroSyncTimer) clearInterval(maestroSyncTimer);
-  maestroSyncTimer = setInterval(function() { cargarMensajesDesdeBackend(true); }, 60000);
+  maestroSyncTimer = setInterval(function() {
+    cargarMensajesDesdeBackend(true);
+    cargarEstadoReservasBackend(true);
+  }, 60000);
 }
 
 document.addEventListener('visibilitychange', function() {
-  if (!document.hidden && document.getElementById('app')?.style.display !== 'none') cargarMensajesDesdeBackend(true);
+  if (!document.hidden && document.getElementById('app')?.style.display !== 'none') {
+    cargarMensajesDesdeBackend(true);
+    cargarEstadoReservasBackend(true);
+  }
 });
 
 function setSyncState(state, text) {
@@ -1205,6 +1339,7 @@ function loadFromStorage() {
     const raw = localStorage.getItem('bnd_reservas');
     if (raw) reservas = JSON.parse(raw).map(r=>({...r,entrada:new Date(r.entrada),salida:new Date(r.salida)}));
   } catch(e) {}
+  try { estadoReservas = JSON.parse(localStorage.getItem('bnd_estado_reservas') || '{}'); } catch(e) { estadoReservas = {}; }
 }
 
 function renderStatsCard() {
@@ -1333,13 +1468,19 @@ function renderLlegadas(items) {
     const r = item.reserva;
     const apto = APTOS[r.aptoIdx] || APTOS[0];
     const c = cfg[item.estado];
+    const hora = horaLlegadaReserva(r.id);
+    const horaHtml = hora
+      ? '<span class="hora-chip">&#128336; Llegada ' + hora + '</span>'
+      : '<span class="hora-chip pending">&#128336; Hora pendiente</span>';
     return `<div class="event-item ${c.clase}" onclick="openModal('${r.id}')">`
       + `<div class="event-icon">${c.icon}</div>`
       + '<div class="event-body">'
       + `<div class="event-name">${r.huesped}</div>`
       + `<div class="event-meta">${apto.alias} &bull; ${r.noches} noches</div>`
-      + `<span class="llegada-estado ${c.badge}">${c.titulo}</span>`
-      + '</div></div>';
+      + `<span class="llegada-estado ${c.badge}">${c.titulo}</span> ${horaHtml}`
+      + '</div>'
+      + `<div class="event-actions"><button class="btn-operativo hour" onclick="event.stopPropagation();cambiarHoraLlegada('${r.id}')">Cambiar hora</button></div>`
+      + '</div>';
   }).join('');
 }
 
@@ -1357,35 +1498,46 @@ function renderLimpiezas(items) {
     return a.reserva.aptoIdx - b.reserva.aptoIdx;
   });
 
-  const cfg = {
-    aviso: {
-      clase:'limpieza-aviso', badge:'aviso', icon:'&#128276;',
-      titulo:'Avisar a limpieza',
-      detalle:function(r){ return r.huesped + ' sale ma&ntilde;ana &bull; confirmar limpieza'; }
-    },
-    curso: {
-      clase:'limpieza-curso', badge:'curso', icon:'&#129529;',
-      titulo:'Piso en limpieza',
-      detalle:function(r){ return r.huesped + ' sale hoy &bull; preparar el apartamento'; }
-    },
-    verificar: {
-      clase:'limpieza-verificar', badge:'verificar', icon:'&#9989;',
-      titulo:'Verificar limpieza piso',
-      detalle:function(r){ return r.huesped + ' entra hoy &bull; revisar antes del check-in'; }
-    }
-  };
-
   el.innerHTML = items.map(function(item) {
     const r = item.reserva;
     const apto = APTOS[r.aptoIdx] || APTOS[0];
-    const c = cfg[item.estado];
-    return '<div class="event-item '+c.clase+'" onclick="openModal(\''+r.id+'\')">'
-      + '<div class="event-icon">'+c.icon+'</div>'
+    let clase='', badge='', icon='', titulo='', detalle='', actionHtml='';
+
+    if (item.estado === 'aviso') {
+      clase='limpieza-aviso'; badge='aviso'; icon='&#128276;'; titulo='Avisar a limpieza';
+      detalle=r.huesped + ' sale ma&ntilde;ana &bull; confirmar limpieza';
+    } else if (item.estado === 'curso') {
+      const st = getEstadoReserva(r.id);
+      if (st.limpiezaEstado === 'limpio') {
+        clase='limpieza-limpio'; badge='limpio'; icon='&#9989;'; titulo='Piso limpio';
+        detalle='Limpieza terminada' + (st.limpiezaPor ? ' por ' + st.limpiezaPor : '') + (st.limpiezaFecha ? ' &bull; ' + fechaHoraCorta(st.limpiezaFecha) : '');
+        actionHtml='<button class="btn-operativo undo" onclick="event.stopPropagation();cambiarEstadoLimpieza(\''+r.id+'\',\'pendiente\',this)">Desmarcar</button>';
+      } else {
+        clase='limpieza-curso'; badge='curso'; icon='&#129529;'; titulo='Piso en limpieza';
+        detalle=r.huesped + ' sale hoy &bull; preparar el apartamento';
+        actionHtml='<button class="btn-operativo clean" onclick="event.stopPropagation();cambiarEstadoLimpieza(\''+r.id+'\',\'limpio\',this)">&#10003; Marcar limpio</button>';
+      }
+    } else {
+      const source = reservaLimpiezaParaLlegada(r);
+      const st = source ? getEstadoReserva(source.id) : {};
+      if (st.limpiezaEstado === 'limpio') {
+        clase='limpieza-limpio'; badge='limpio'; icon='&#9989;'; titulo='Limpieza terminada';
+        detalle=r.huesped + ' entra hoy' + (st.limpiezaPor ? ' &bull; limpio por ' + st.limpiezaPor : '');
+      } else {
+        clase='limpieza-verificar'; badge='verificar'; icon='&#128269;'; titulo='Verificar limpieza piso';
+        detalle=r.huesped + ' entra hoy &bull; revisar antes del check-in';
+      }
+    }
+
+    return '<div class="event-item '+clase+'" onclick="openModal(\''+r.id+'\')">'
+      + '<div class="event-icon">'+icon+'</div>'
       + '<div class="event-body">'
       + '<div class="event-name">'+apto.alias+'</div>'
-      + '<div class="event-meta">'+c.detalle(r)+'</div>'
-      + '<span class="limpieza-estado '+c.badge+'">'+c.titulo+'</span>'
-      + '</div></div>';
+      + '<div class="event-meta">'+detalle+'</div>'
+      + '<span class="limpieza-estado '+badge+'">'+titulo+'</span>'
+      + '</div>'
+      + (actionHtml ? '<div class="event-actions">'+actionHtml+'</div>' : '')
+      + '</div>';
   }).join('');
 }
 
@@ -1545,6 +1697,7 @@ function seleccionarReserva() {
       <div><span style="color:var(--gris-4);font-size:.72rem;display:block">NOCHES</span><strong>${r.noches}</strong></div>
     </div>`;
   block.style.display='block';
+  document.getElementById('ci-hora-llegada').value = horaLlegadaReserva(r.id) || '14:00';
   viajeroCount=0;
   document.getElementById('viajeros-container').innerHTML='';
   addViajero();
@@ -1604,7 +1757,7 @@ function guardarCheckin() {
     viajeros.push(v);n++;
   }
   if(!viajeros.length){showToast('A\u00F1ade al menos un viajero','error');return;}
-  const data={reservaId:r.id,huesped:r.huesped,apartamento:APTOS[r.aptoIdx]?.alias,entrada:fmtDate(r.entrada),salida:fmtDate(r.salida),horaLlegada,fechaRegistro:new Date().toISOString(),viajeros};
+  const data={reservaId:r.id,huesped:r.huesped,apartamento:APTOS[r.aptoIdx]?.alias,entrada:fmtDate(r.entrada),salida:fmtDate(r.salida),horaLlegada,actor:actorActual(),fechaRegistro:new Date().toISOString(),viajeros};
   // Guardar local como respaldo
   const prev=JSON.parse(localStorage.getItem('bnd_checkins')||'[]');
   const idx=prev.findIndex(c=>c.reservaId===id);
@@ -2069,6 +2222,7 @@ async function enviarASheets_(data) {
     if (!estado || !estado.ok || !estado.exists) throw new Error('El registro no aparece en la hoja CheckIns');
     showToast('✓ Check-in guardado y verificado en Google Sheets', 'success');
     await cargarDesdeMaestro();
+    await cargarEstadoReservasBackend(true);
   } catch(e) {
     showToast('Guardado local, pero NO verificado en Sheets: ' + e.message, 'error');
   }
@@ -2357,7 +2511,9 @@ function getMsgEnviado(rid, tipo) {
 }
 async function guardarMensajeEnviado(rid, tipo, huesped) {
   const fecha = new Date().toISOString();
-  const payload = {action:'guardarEnviado', key:'MSG|' + rid + '|' + tipo, fecha:fecha, huesped:huesped || '', tipo:tipo};
+  const reserva = reservas.find(function(r){ return r.id === rid; });
+  const apto = reserva ? (APTOS[reserva.aptoIdx] || APTOS[0]) : null;
+  const payload = {action:'guardarEnviado', key:'MSG|' + rid + '|' + tipo, fecha:fecha, huesped:huesped || '', tipo:tipo, actor:actorActual(), apartamento:apto?.alias || '', origen:'Aplicación'};
   const url = APPS_SCRIPT_URL + '?action=guardarEnviado&data=' + encodeURIComponent(JSON.stringify(payload));
   const resp = await jsonpRequest(url, 15000);
   if (!resp || !resp.ok) throw new Error(resp?.error || 'Google Sheets no confirmó el guardado');
@@ -2453,6 +2609,10 @@ function renderGestion() {
     var m3=getMsgEnviado(r.id,'despedida');
     var ci=getCIReserva(r.id);
     var nV=ci&&ci.viajeros?ci.viajeros.length:ci?1:0;
+    var op=getEstadoReserva(r.id);
+    var horaOp=horaLlegadaReserva(r.id);
+    var limpio=op.limpiezaEstado==='limpio';
+    var puedeMarcarLimpieza=r.salida<=hoy;
     return '<div class="gest-card '+sCls+'">'
       +'<div class="gest-header" onclick="toggleGest('+i+')">'
       +'<div><div class="gest-nombre">&#128100; '+r.huesped+' <span class="gest-status '+sCls+'">'+sTxt+'</span></div>'
@@ -2488,6 +2648,12 @@ function renderGestion() {
       +'<button class="btn-gc link" onclick="linkG('+i+',this)">&#128279; Enlace</button>'
       +'</div></div>'
       +(ci&&ci.viajeros?'<div class="gest-chips">'+ci.viajeros.map(function(v){return '<span class="gest-chip">'+(v.nombre||'')+' '+(v.apellidos||'')+'</span>';}).join('')+'</div>':'')
+      +'</div>'
+      +'<div class="gest-section"><div class="gest-stitle">&#9881; Operativa</div>'
+      +'<div class="gest-row"><div class="gest-label '+(horaOp?'done':'pend')+'">&#128336; Hora llegada: '+(horaOp||'pendiente')+'</div>'
+      +`<div class="gest-acts"><button class="btn-gc link" onclick="event.stopPropagation();cambiarHoraLlegada('${r.id}')">Cambiar</button></div></div>`
+      +'<div class="gest-row"><div class="gest-label '+(limpio?'done':'pend')+'">'+(limpio?'&#9989; Piso limpio'+(op.limpiezaPor?' · '+op.limpiezaPor:''):(puedeMarcarLimpieza?'&#129529; Limpieza pendiente':'&#128197; Limpieza al finalizar la estancia'))+'</div>'
+      +(puedeMarcarLimpieza?`<div class="gest-acts"><button class="btn-gc ${limpio?'link':'copy'}" onclick="event.stopPropagation();cambiarEstadoLimpieza('${r.id}','${limpio?'pendiente':'limpio'}',this)">${limpio?'Desmarcar':'Marcar limpio'}</button></div>`:'')+'</div>'
       +'</div></div></div>';
   }).join('');
 }
